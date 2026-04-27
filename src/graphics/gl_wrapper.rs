@@ -1,7 +1,6 @@
 use gl::types::*;
 use std::mem;
 use std::os::raw::*;
-use std::ptr;
 
 pub struct Vao {
     id: gl::types::GLuint,
@@ -56,12 +55,23 @@ impl BufferObject {
         }
     }
 
-    pub fn store_f32_data(&self, data: &[f32]) {
+    pub fn store_f32_data(&self, data: &[GLfloat]) {
         unsafe {
             gl::BufferData(
                 self.r#type,
                 (data.len() * mem::size_of::<gl::types::GLfloat>()) as gl::types::GLsizeiptr,
-                &data[0] as *const f32 as *const c_void,
+                &data[0] as *const GLfloat as *const c_void,
+                self.usage,
+            )
+        }
+    }
+
+    pub fn store_u32_data(&self, data: &[u32]) {
+        unsafe {
+            gl::BufferData(
+                self.r#type,
+                (data.len() * mem::size_of::<gl::types::GLint>()) as gl::types::GLsizeiptr,
+                &data[0] as *const u32 as *const c_void,
                 self.usage,
             )
         }
