@@ -1,12 +1,16 @@
-use libm::{cos, sin};
-use std::num;
+use std::f32::consts::PI;
+
+use libm::{cosf, sinf};
 
 #[derive(Debug)]
 pub struct Matrice4<T> {
     pub value: [T; 16],
 }
 
-// impl get for MyMatrx {}
+fn deg_to_rad(value: f32) -> f32 {
+    value * (PI / 180.0)
+}
+
 impl<T: Default> Default for Matrice4<T> {
     fn default() -> Self {
         Self {
@@ -18,20 +22,6 @@ impl<T: Default> Default for Matrice4<T> {
 impl<T: Default> Matrice4<T> {
     pub fn new() -> Self {
         Self::default()
-    }
-}
-
-struct CosSin {
-    cos: f64,
-    sin: f64,
-}
-
-impl CosSin {
-    pub fn new(value: f64) -> Self {
-        Self {
-            cos: cos(value),
-            sin: sin(value),
-        }
     }
 }
 
@@ -79,43 +69,34 @@ where
         res
     }
 
-    pub fn translate(&mut self, translation: &[T; 3]) {
-        self.value[12] = self.value[12] + translation[0];
-        self.value[13] = self.value[13] + translation[1];
-        self.value[14] = self.value[14] + translation[2];
+    pub fn translate(&mut self, x: T, y: T, z: T) {
+        self.value[3] = self.value[3] + x;
+        self.value[7] = self.value[7] + y;
+        self.value[11] = self.value[11] + z;
     }
 
-    pub fn rotate(&mut self, x: f64, y: f64, z: f64)
+    pub fn rotate(&mut self, x: f32, y: f32, z: f32)
     where
-        T: From<f64> + std::ops::Mul<Output = T> + Copy + std::ops::Add<Output = T>,
+        T: From<f32> + std::ops::Mul<Output = T> + Copy + std::ops::Add<Output = T>,
     {
-        if x != 0.0 {
-            let mut rot_x: Matrice4<T> = Matrice4::identity();
-            let cos_sin_x = CosSin::new(x);
-            rot_x.value[0] = T::from(cos_sin_x.cos);
-            rot_x.value[1] = T::from(-cos_sin_x.sin);
-            rot_x.value[4] = T::from(cos_sin_x.sin);
-            rot_x.value[5] = T::from(cos_sin_x.cos);
-            self.value = self.multiply(rot_x).value;
-        }
-        if y != 0.0 {
-            let mut rot_y: Matrice4<T> = Matrice4::identity();
-            let cos_sin_y = CosSin::new(y);
-            rot_y.value[0] = T::from(cos_sin_y.cos);
-            rot_y.value[2] = T::from(cos_sin_y.sin);
-            rot_y.value[8] = T::from(-cos_sin_y.sin);
-            rot_y.value[10] = T::from(cos_sin_y.cos);
-            self.value = self.multiply(rot_y).value;
-        }
-        if z != 0.0 {
-            let mut rot_z: Matrice4<T> = Matrice4::identity();
-            let cos_sin_z = CosSin::new(z);
-            rot_z.value[5] = T::from(cos_sin_z.cos);
-            rot_z.value[6] = T::from(-cos_sin_z.sin);
-            rot_z.value[9] = T::from(cos_sin_z.sin);
-            rot_z.value[10] = T::from(cos_sin_z.cos);
-            self.value = self.multiply(rot_z).value;
-        }
+        let cos_z = cosf(z);
+        let sin_z = sinf(z);
+        let cos_x = cosf(x);
+        let sin_x = sinf(x);
+        let cos_y = cosf(y);
+        let sin_y = sinf(z);
+
+        let mut rot_mat: Matrice4<T> = Matrice4::identity();
+        rot_mat.value[0] = T::from(cos_z * cos_y);
+        rot_mat.value[1] = T::from((cos_z * sin_y * sin_x) - (sin_z * cos_x));
+        rot_mat.value[2] = T::from((cos_z * sin_y * cos_x) + (sin_z * sin_x));
+        rot_mat.value[4] = T::from(sin_z * cos_y);
+        rot_mat.value[5] = T::from((sin_z * sin_y * sin_x) + (cos_z * cos_x));
+        rot_mat.value[6] = T::from((sin_z * sin_y * cos_x) - (cos_z * sin_x));
+        rot_mat.value[8] = T::from(-sin_y);
+        rot_mat.value[9] = T::from(cos_y * sin_x);
+        rot_mat.value[10] = T::from(cos_y * cos_x);
+        self.value = self.multiply(rot_mat).value;
     }
 }
 
