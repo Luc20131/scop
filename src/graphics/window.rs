@@ -58,4 +58,8 @@ impl Window {
             }
         }
     }
+
+    pub fn get_time(&mut self) -> f64 {
+        self.glfw.get_time()
+    }
 }
