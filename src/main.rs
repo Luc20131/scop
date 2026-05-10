@@ -2,11 +2,14 @@ mod parser;
 use cgmath::SquareMatrix;
 use cgmath::prelude::*;
 use cgmath::{Matrix4, Rad, vec3};
+use gl::GetProgramInterfaceiv;
 use gl::types::*;
 use scop::graphics::gl_wrapper::*;
 use scop::graphics::shaders::Shader;
 use scop::my_lib::matrice::Matrice4;
+use scop::my_lib::matrice::deg_to_rad;
 use std::env;
+use std::f32::consts::PI;
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::fs;
@@ -48,10 +51,7 @@ fn main() {
     let vertices: &[GLfloat] = obj.v.as_slice();
     let indices: &[u32] = obj.indices.as_slice();
 
-    // let uni_color_loc: i32;
-    println!("Vertices test : {:?}", indices);
-    println!("Face test : {:?}", obj.v);
-
+    //INIT OpenGL
     window.init_gl();
 
     let mut shaders = Shader::new(
@@ -83,7 +83,7 @@ fn main() {
     position_attribute.enable();
 
     // let index_attribute = VertexAttribute::new(
-    //     1,
+    //     2,
     //     3,
     //     gl::FLOAT,
     //     gl::FALSE,
@@ -91,17 +91,18 @@ fn main() {
     //     ptr::null(),
     // );
 
-    // let color_attribute = VertexAttribute::new(
-    //     2,
-    //     3,
-    //     gl::FLOAT,
-    //     gl::FALSE,
-    //     6 * mem::size_of::<GLfloat>() as GLsizei,
-    //     (3 * mem::size_of::<GLfloat>()) as *const c_void,
-    // );
+    let color_attribute = VertexAttribute::new(
+        1,
+        3,
+        gl::FLOAT,
+        gl::FALSE,
+        3 * mem::size_of::<GLfloat>() as GLsizei,
+        ptr::null(),
+    );
 
-    // color_attribute.enable();
+    color_attribute.enable();
 
+    // println!("{:?}", transform);
     // index_attribute.enable();
     shaders.use_prog();
     // let tmp: &str = "someUniform";
@@ -109,16 +110,16 @@ fn main() {
         unsafe {
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+            gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
 
-            let mut transform: Matrix4<f32> = Matrix4::identity();
-            // transform = transform * Matrix4::<f32>::from_translation(vec3(0.0, -0.5, 0.0));
-            transform = transform * Matrix4::<f32>::from_angle_y(Rad(window.get_time() as f32));
-            transform = transform * Matrix4::<f32>::from_scale(0.2);
-            // // get matrix's uniform location and set matrix
+            // transform.translate(0.0, 0.0, 50.0);
+            let mut transform: Matrice4<f32> = Matrice4::identity();
             shaders.use_prog();
+            let oui = window.get_time() as f32;
+            transform.rotate(0.0, oui, 0.0);
+            transform = transform.scale(0.1);
             let transform_loc = gl::GetUniformLocation(shaders.id, c_str!("transform").as_ptr());
-            gl::UniformMatrix4fv(transform_loc, 1, gl::FALSE, transform.as_ptr());
+            gl::UniformMatrix4fv(transform_loc, 1, gl::FALSE, transform.value.as_ptr());
             gl::DrawElements(
                 gl::TRIANGLES,
                 indices.len() as GLsizei,

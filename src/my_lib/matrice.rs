@@ -1,13 +1,21 @@
 use std::f32::consts::PI;
 
-use libm::{cosf, sinf};
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Matrice4<T> {
     pub value: [T; 16],
 }
 
-fn deg_to_rad(value: f32) -> f32 {
+// impl<T: Default> std::ops::Index<usize> for Matrice4<T>
+// where
+//     T: ?Sized + Clone,
+// {
+//     type Output = T;
+//     fn index(&self, i: usize) -> T {
+//         self.value[i]
+//     }
+// }
+
+pub fn deg_to_rad(value: f32) -> f32 {
     value * (PI / 180.0)
 }
 
@@ -27,7 +35,11 @@ impl<T: Default> Matrice4<T> {
 
 impl<T: Default> Matrice4<T>
 where
-    T: From<f32> + std::ops::Mul<Output = T> + Copy + std::ops::Add<Output = T>,
+    T: From<f32>
+        + std::ops::Mul<Output = T>
+        + Copy
+        + std::ops::Add<Output = T>
+        + std::ops::MulAssign,
 {
     pub fn identity() -> Self {
         let mut value = [T::default(); 16];
@@ -38,35 +50,12 @@ where
         Self { value }
     }
 
-    pub fn scale(&mut self, scale: &[T; 3]) -> Matrice4<T> {
+    pub fn scale(&mut self, scale: T) -> Matrice4<T> {
         let mut res: Matrice4<T> = Matrice4::<T>::identity();
-        res.value[0] = scale[0];
-        res.value[5] = scale[1];
-        res.value[10] = scale[2];
+        res.value[0] *= scale;
+        res.value[5] *= scale;
+        res.value[10] *= scale;
         self.multiply(res)
-    }
-
-    pub fn multiply(&mut self, m: Matrice4<T>) -> Matrice4<T> {
-        let mut res: Matrice4<T> = Matrice4::default();
-        for y in 0..4 {
-            for i in 0..4 {
-                res.value[i + (y * 4)] = sub_mult_proc(
-                    [
-                        self.value[0 + (y % 4 * 4)],
-                        self.value[1 + (y % 4 * 4)],
-                        self.value[2 + (y % 4) * 4],
-                        self.value[3 + (y % 4) * 4],
-                    ],
-                    [
-                        m.value[0 + (i % 4 * 4)],
-                        m.value[1 + (i % 4 * 4)],
-                        m.value[2 + (i % 4 * 4)],
-                        m.value[3 + (i % 4 * 4)],
-                    ],
-                );
-            }
-        }
-        res
     }
 
     pub fn translate(&mut self, x: T, y: T, z: T) {
@@ -79,14 +68,19 @@ where
     where
         T: From<f32> + std::ops::Mul<Output = T> + Copy + std::ops::Add<Output = T>,
     {
-        let cos_z = cosf(z);
-        let sin_z = sinf(z);
-        let cos_x = cosf(x);
-        let sin_x = sinf(x);
-        let cos_y = cosf(y);
-        let sin_y = sinf(z);
+        let cos_z = f32::cos(z);
+        let sin_z = f32::sin(z);
+        let cos_x = f32::cos(x);
+        let sin_x = f32::sin(x);
+        let cos_y = f32::cos(y);
+        let sin_y = f32::sin(y);
+
+        // let mut rot_x: Matrice4<T> = Matrice4::identity();
+
+        // let mut rot_y: Matrice4<T> = Matrice4::identity();
 
         let mut rot_mat: Matrice4<T> = Matrice4::identity();
+
         rot_mat.value[0] = T::from(cos_z * cos_y);
         rot_mat.value[1] = T::from((cos_z * sin_y * sin_x) - (sin_z * cos_x));
         rot_mat.value[2] = T::from((cos_z * sin_y * cos_x) + (sin_z * sin_x));
@@ -96,7 +90,52 @@ where
         rot_mat.value[8] = T::from(-sin_y);
         rot_mat.value[9] = T::from(cos_y * sin_x);
         rot_mat.value[10] = T::from(cos_y * cos_x);
+        // let mut res = Matrice4::identity();
+        // if x != 0.0 {
+        //     rot_x.value[5] = T::from(cos_x);
+        //     rot_x.value[6] = T::from(-sin_x);
+        //     rot_x.value[9] = T::from(sin_x);
+        //     rot_x.value[10] = T::from(cos_x);
+        // }
+        // if y != 0.0 {
+        //     rot_y.value[0] = T::from(cos_y);
+        //     rot_y.value[2] = T::from(-sin_y);
+        //     rot_y.value[8] = T::from(sin_y);
+        //     rot_y.value[10] = T::from(cos_y);
+        // }
+        // if z != 0.0 {
+        //     rot_z.value[0] = T::from(cos_z);
+        //     rot_z.value[1] = T::from(-sin_z);
+        //     rot_z.value[4] = T::from(sin_z);
+        //     rot_z.value[5] = T::from(cos_z);
+        // }
+        // res.value = res.multiply(rot_x).value;
+        // res.value = rot_y.multiply(res.clone()).value;
+        // res.value = res.multiply(rot_z).value;
         self.value = self.multiply(rot_mat).value;
+    }
+
+    pub fn multiply(&mut self, m: Matrice4<T>) -> Matrice4<T> {
+        let mut res: Matrice4<T> = Matrice4::default();
+        for y in 0..4 {
+            for i in 0..4 {
+                res.value[i + (y * 4)] = sub_mult_proc(
+                    [
+                        self.value[0 + i],
+                        self.value[4 + i],
+                        self.value[8 + i],
+                        self.value[12 + i],
+                    ],
+                    [
+                        m.value[0 + y * 4],
+                        m.value[1 + y * 4],
+                        m.value[2 + y * 4],
+                        m.value[3 + y * 4],
+                    ],
+                );
+            }
+        }
+        res
     }
 }
 
