@@ -1,32 +1,26 @@
 mod parser;
-use cgmath::SquareMatrix;
-use cgmath::prelude::*;
-use cgmath::{Matrix4, Rad, vec3};
-use gl::GetProgramInterfaceiv;
 use gl::types::*;
 use scop::graphics::gl_wrapper::*;
 use scop::graphics::shaders::Shader;
+use scop::my_lib::bmp_parser::image_loader;
 use scop::my_lib::matrice::Matrice4;
-use scop::my_lib::matrice::deg_to_rad;
 use std::env;
 use std::f32::consts::PI;
 use std::ffi::CStr;
-use std::ffi::CString;
 use std::fs;
 use std::mem;
-use std::os::raw::c_void;
 use std::ptr;
 use std::str::Lines;
 extern crate glfw;
-use self::glfw::{Action, Context, Key};
+// use self::glfw::{Action, Context, Key};
 
-macro_rules! null_str {
-    ($lit:literal) => {{
-        // "type check" the input
-        const _: &str = $lit;
-        concat!($lit, "\0")
-    }};
-}
+// macro_rules! null_str {
+//     ($lit:literal) => {{
+//         // "type check" the input
+//         const _: &str = $lit;
+//         concat!($lit, "\0")
+//     }};
+// }
 
 macro_rules! c_str {
     ($literal:expr) => {
@@ -37,6 +31,7 @@ macro_rules! c_str {
 use scop::graphics::window::Window;
 
 fn main() {
+    println!("Loading Object...");
     let mut obj: parser::Obj = parser::Obj::new();
     let content = fs::read_to_string(env::args().nth(1).unwrap()).unwrap();
     let lines: Lines = content.lines();
@@ -45,12 +40,13 @@ fn main() {
     }
     obj.build_indices();
     obj.print_data();
+    println!("Loading Textures...");
+    image_loader("./resources/texture.bmp");
 
-    let mut window = Window::new(1000, 1000, &obj.name);
+    let mut window = Window::new(1920, 1080, &obj.name);
 
     let vertices: &[GLfloat] = obj.v.as_slice();
     let indices: &[u32] = obj.indices.as_slice();
-
     //INIT OpenGL
     window.init_gl();
 
@@ -105,27 +101,30 @@ fn main() {
     // println!("{:?}", transform);
     // index_attribute.enable();
     shaders.use_prog();
+
+    let mut time = window.get_time();
     // let tmp: &str = "someUniform";
     while !window.should_close() {
         unsafe {
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
+            gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
 
-            // transform.translate(0.0, 0.0, 50.0);
             let mut transform: Matrice4<f32> = Matrice4::identity();
+            transform = transform.scale(0.05);
             shaders.use_prog();
             let oui = window.get_time() as f32;
-            transform.rotate(0.0, oui, 0.0);
-            transform = transform.scale(0.1);
+            transform.rotate(PI / 6.0, oui, 0.0);
+            // transform.translate(-0.1, -1.0, -0.1);
             let transform_loc = gl::GetUniformLocation(shaders.id, c_str!("transform").as_ptr());
-            gl::UniformMatrix4fv(transform_loc, 1, gl::FALSE, transform.value.as_ptr());
+            gl::UniformMatrix4fv(transform_loc, 1, gl::TRUE, transform.value.as_ptr());
             gl::DrawElements(
                 gl::TRIANGLES,
                 indices.len() as GLsizei,
                 gl::UNSIGNED_INT,
                 ptr::null(),
             );
+            time = window.update_title(time);
         }
         window.update();
     }

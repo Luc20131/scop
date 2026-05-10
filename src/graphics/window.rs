@@ -4,6 +4,7 @@ pub struct Window {
     glfw: glfw::Glfw,
     window_handle: glfw::PWindow,
     events: glfw::GlfwReceiver<(f64, WindowEvent)>,
+    frame_count: u32,
 }
 
 impl Window {
@@ -16,11 +17,11 @@ impl Window {
 
         window.set_framebuffer_size_polling(true);
         window.set_key_polling(true);
-
         Window {
             glfw,
             window_handle: window,
             events,
+            frame_count: 0,
         }
     }
 
@@ -61,5 +62,18 @@ impl Window {
 
     pub fn get_time(&mut self) -> f64 {
         self.glfw.get_time()
+    }
+
+    pub fn update_title(&mut self, last_time: f64) -> f64 {
+        self.frame_count += 1;
+        let time = self.glfw.get_time();
+        if time - last_time >= 1.0 {
+            let fps = self.frame_count.to_string();
+            let fps_str: &str = &fps;
+            self.window_handle.set_title(fps_str);
+            self.frame_count = 0;
+            return time;
+        }
+        last_time
     }
 }
