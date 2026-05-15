@@ -1,37 +1,26 @@
 mod parser;
 use gl::types::*;
+use glfw::MouseButton;
 use scop::graphics::gl_wrapper::*;
 use scop::graphics::shaders::Shader;
 use scop::my_lib::bmp_parser::image_loader;
 use scop::my_lib::matrice::Matrice4;
 use std::env;
-use std::f32::consts::PI;
-use std::ffi::CStr;
+use std::ffi::CString;
 use std::fs;
 use std::mem;
 use std::ptr;
 use std::str::Lines;
 extern crate glfw;
-// use self::glfw::{Action, Context, Key};
-
-// macro_rules! null_str {
-//     ($lit:literal) => {{
-//         // "type check" the input
-//         const _: &str = $lit;
-//         concat!($lit, "\0")
-//     }};
-// }
-
-macro_rules! c_str {
-    ($literal:expr) => {
-        CStr::from_bytes_with_nul_unchecked(concat!($literal, "\0").as_bytes())
-    };
-}
+use self::glfw::Key;
 
 use scop::graphics::window::Window;
 
 fn main() {
-    println!("Loading Object...");
+    println!(
+        "Loading {}...",
+        env::args().nth(1).expect("Failed to read first argument")
+    );
     let mut obj: parser::Obj = parser::Obj::new();
     let content = fs::read_to_string(env::args().nth(1).unwrap()).unwrap();
     let lines: Lines = content.lines();
@@ -40,9 +29,7 @@ fn main() {
     }
     obj.build_indices();
     obj.print_data();
-    println!("Loading Textures...");
-    image_loader("./resources/texture.bmp");
-
+    image_loader("./resources/non.bmp");
     let mut window = Window::new(1920, 1080, &obj.name);
 
     let vertices: &[GLfloat] = obj.v.as_slice();
@@ -64,7 +51,6 @@ fn main() {
 
     let ebo = BufferObject::new(gl::ELEMENT_ARRAY_BUFFER, gl::STATIC_DRAW);
     ebo.bind();
-
     ebo.store_u32_data(&indices);
 
     let position_attribute = VertexAttribute::new(
@@ -95,29 +81,26 @@ fn main() {
         3 * mem::size_of::<GLfloat>() as GLsizei,
         ptr::null(),
     );
-
     color_attribute.enable();
 
-    // println!("{:?}", transform);
-    // index_attribute.enable();
-    shaders.use_prog();
-
     let mut time = window.get_time();
-    // let tmp: &str = "someUniform";
+    let mut Y_angle: f32 = 0.0;
+    let mut X_angle: f32 = 0.0;
+    let mut Z_angle: f32 = 0.0;
+    let mut scaling: f32 = 0.1;
+    let mut render_type = gl::LINE;
     while !window.should_close() {
         unsafe {
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+            gl::PolygonMode(gl::FRONT_AND_BACK, render_type);
 
-            let mut transform: Matrice4<f32> = Matrice4::identity();
-            transform = transform.scale(0.05);
             shaders.use_prog();
-            let oui = window.get_time() as f32;
-            transform.rotate(PI / 6.0, oui, 0.0);
-            // transform.translate(-0.1, -1.0, -0.1);
-            let transform_loc = gl::GetUniformLocation(shaders.id, c_str!("transform").as_ptr());
-            gl::UniformMatrix4fv(transform_loc, 1, gl::TRUE, transform.value.as_ptr());
+            let mut transform: Matrice4<f32> = Matrice4::identity();
+            transform.translate(0.0, 0.0, 0.0);
+            transform = transform.scale(scaling);
+            transform.rotate(X_angle, Y_angle, Z_angle);
+            shaders.set_matrix4(&CString::new("transform").unwrap(), transform);
             gl::DrawElements(
                 gl::TRIANGLES,
                 indices.len() as GLsizei,
@@ -127,5 +110,43 @@ fn main() {
             time = window.update_title(time);
         }
         window.update();
+        if *(window.keys_state.get(&Key::A).unwrap()) {
+            Y_angle -= 0.01;
+        }
+        if *(window.keys_state.get(&Key::D).unwrap()) {
+            Y_angle += 0.01;
+        }
+        if *(window.keys_state.get(&Key::W).unwrap()) {
+            X_angle -= 0.01;
+        }
+        if *(window.keys_state.get(&Key::S).unwrap()) {
+            X_angle += 0.01;
+        }
+        if *(window.keys_state.get(&Key::E).unwrap()) {
+            Z_angle -= 0.01;
+        }
+        if *(window.keys_state.get(&Key::Q).unwrap()) {
+            Z_angle += 0.01;
+        }
+        if *(window.keys_state.get(&Key::V).unwrap()) {
+            render_type = gl::POINT;
+        }
+        if *(window.keys_state.get(&Key::B).unwrap()) {
+            render_type = gl::LINE;
+        }
+        if *(window.keys_state.get(&Key::N).unwrap()) {
+            render_type = gl::FILL;
+        }
+        if *(window.keys_state.get(&Key::R).unwrap()) {
+            Z_angle = 0.0;
+            X_angle = 0.0;
+            Y_angle = 0.0;
+        }
+        if *(window
+            .mouse_state
+            .mouse_buttons
+            .get(&MouseButton::Left)
+            .unwrap())
+        {}
     }
 }

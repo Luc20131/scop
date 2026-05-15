@@ -5,16 +5,6 @@ pub struct Matrice4<T> {
     pub value: [T; 16],
 }
 
-// impl<T: Default> std::ops::Index<usize> for Matrice4<T>
-// where
-//     T: ?Sized + Clone,
-// {
-//     type Output = T;
-//     fn index(&self, i: usize) -> T {
-//         self.value[i]
-//     }
-// }
-
 pub fn deg_to_rad(value: f32) -> f32 {
     value * (PI / 180.0)
 }
@@ -74,13 +64,7 @@ where
         let sin_x = f32::sin(x);
         let cos_y = f32::cos(y);
         let sin_y = f32::sin(y);
-
-        // let mut rot_x: Matrice4<T> = Matrice4::identity();
-
-        // let mut rot_y: Matrice4<T> = Matrice4::identity();
-
         let mut rot_mat: Matrice4<T> = Matrice4::identity();
-
         rot_mat.value[0] = T::from(cos_z * cos_y);
         rot_mat.value[1] = T::from((cos_z * sin_y * sin_x) - (sin_z * cos_x));
         rot_mat.value[2] = T::from((cos_z * sin_y * cos_x) + (sin_z * sin_x));
@@ -90,28 +74,6 @@ where
         rot_mat.value[8] = T::from(-sin_y);
         rot_mat.value[9] = T::from(cos_y * sin_x);
         rot_mat.value[10] = T::from(cos_y * cos_x);
-        // let mut res = Matrice4::identity();
-        // if x != 0.0 {
-        //     rot_x.value[5] = T::from(cos_x);
-        //     rot_x.value[6] = T::from(-sin_x);
-        //     rot_x.value[9] = T::from(sin_x);
-        //     rot_x.value[10] = T::from(cos_x);
-        // }
-        // if y != 0.0 {
-        //     rot_y.value[0] = T::from(cos_y);
-        //     rot_y.value[2] = T::from(-sin_y);
-        //     rot_y.value[8] = T::from(sin_y);
-        //     rot_y.value[10] = T::from(cos_y);
-        // }
-        // if z != 0.0 {
-        //     rot_z.value[0] = T::from(cos_z);
-        //     rot_z.value[1] = T::from(-sin_z);
-        //     rot_z.value[4] = T::from(sin_z);
-        //     rot_z.value[5] = T::from(cos_z);
-        // }
-        // res.value = res.multiply(rot_x).value;
-        // res.value = rot_y.multiply(res.clone()).value;
-        // res.value = res.multiply(rot_z).value;
         self.value = self.multiply(rot_mat).value;
     }
 
