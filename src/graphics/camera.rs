@@ -33,9 +33,9 @@ impl Camera {
         self.pos.x += pos.x;
         self.pos.z += pos.z;
         let p = Vec3 {
-            x: f32::sin(self.pos.x * 10.0),
+            x: f32::sin(self.pos.x) * f32::cos(self.pos.y) * 2.0,
             y: 0.0,
-            z: f32::cos(self.pos.y * 10.0),
+            z: f32::cos(self.pos.x) * 2.0,
         };
 
         Matrix4::<f32>::look_at(p, self.target.clone(), self.up.clone())

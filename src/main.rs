@@ -30,7 +30,7 @@ fn main() {
     }
     obj.build_indices();
     obj.print_data();
-    image_loader("./resources/non.bmp");
+    image_loader("./resources/oui.bmp");
     let mut window = Window::new(1920, 1080, &obj.name);
 
     let vertices: &[GLfloat] = obj.v.as_slice();
@@ -91,27 +91,27 @@ fn main() {
     let scaling: f32 = 0.1;
     let mut render_type = gl::LINE;
     let mut camera: Camera = Camera::new();
-    let mut view = camera.set_pos(Vec3 {
-        x: -500.0,
-        y: 0.0,
-        z: 0.0,
-    });
+    // let mut view = camera.set_pos(Vec3 {
+    //     x: -500.0,
+    //     y: 0.0,
+    //     z: 0.0,
+    // });
     // println!("View : {:?}", view);
     while !window.should_close() {
         unsafe {
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
             gl::PolygonMode(gl::FRONT_AND_BACK, render_type);
-            view = camera.move_cam(Vec3 {
-                x: 0.001,
+            let view = camera.move_cam(Vec3 {
+                x: 0.01,
                 y: 0.0,
                 z: 0.0,
             });
-            shaders.set_matrix4(&CString::new("view").unwrap(), view.clone());
+            shaders.set_matrix4(&CString::new("view").unwrap(), view);
             let mut transform: Matrix4<f32> = Matrix4::identity();
             transform.translate(0.0, 0.0, 0.0);
             transform = transform.scale(scaling);
-            transform.rotate(x_angle, y_angle, z_angle);
+            // transform.rotate(x_angle, y_angle, z_angle);
             shaders.set_matrix4(&CString::new("transform").unwrap(), transform);
             shaders.use_prog();
             gl::DrawElements(
