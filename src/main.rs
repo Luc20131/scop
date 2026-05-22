@@ -1,10 +1,13 @@
 mod parser;
 use gl::types::*;
 use glfw::MouseButton;
+use scop::graphics::camera::Camera;
 use scop::graphics::gl_wrapper::*;
 use scop::graphics::shaders::Shader;
+use scop::graphics::window::Window;
 use scop::my_lib::bmp_parser::image_loader;
-use scop::my_lib::matrice::Matrice4;
+use scop::my_lib::matrice::Matrix4;
+use scop::my_lib::vec3::Vec3;
 use std::env;
 use std::ffi::CString;
 use std::fs;
@@ -13,8 +16,6 @@ use std::ptr;
 use std::str::Lines;
 extern crate glfw;
 use self::glfw::Key;
-
-use scop::graphics::window::Window;
 
 fn main() {
     println!(
@@ -84,23 +85,35 @@ fn main() {
     color_attribute.enable();
 
     let mut time = window.get_time();
-    let mut Y_angle: f32 = 0.0;
-    let mut X_angle: f32 = 0.0;
-    let mut Z_angle: f32 = 0.0;
-    let mut scaling: f32 = 0.1;
+    let mut y_angle: f32 = 0.0;
+    let mut x_angle: f32 = 0.0;
+    let mut z_angle: f32 = 0.0;
+    let scaling: f32 = 0.1;
     let mut render_type = gl::LINE;
+    let mut camera: Camera = Camera::new();
+    let mut view = camera.set_pos(Vec3 {
+        x: -500.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    // println!("View : {:?}", view);
     while !window.should_close() {
         unsafe {
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
             gl::PolygonMode(gl::FRONT_AND_BACK, render_type);
-
-            shaders.use_prog();
-            let mut transform: Matrice4<f32> = Matrice4::identity();
+            view = camera.move_cam(Vec3 {
+                x: 0.001,
+                y: 0.0,
+                z: 0.0,
+            });
+            shaders.set_matrix4(&CString::new("view").unwrap(), view.clone());
+            let mut transform: Matrix4<f32> = Matrix4::identity();
             transform.translate(0.0, 0.0, 0.0);
             transform = transform.scale(scaling);
-            transform.rotate(X_angle, Y_angle, Z_angle);
+            transform.rotate(x_angle, y_angle, z_angle);
             shaders.set_matrix4(&CString::new("transform").unwrap(), transform);
+            shaders.use_prog();
             gl::DrawElements(
                 gl::TRIANGLES,
                 indices.len() as GLsizei,
@@ -110,24 +123,24 @@ fn main() {
             time = window.update_title(time);
         }
         window.update();
-        if *(window.keys_state.get(&Key::A).unwrap()) {
-            Y_angle -= 0.01;
-        }
-        if *(window.keys_state.get(&Key::D).unwrap()) {
-            Y_angle += 0.01;
-        }
-        if *(window.keys_state.get(&Key::W).unwrap()) {
-            X_angle -= 0.01;
-        }
-        if *(window.keys_state.get(&Key::S).unwrap()) {
-            X_angle += 0.01;
-        }
-        if *(window.keys_state.get(&Key::E).unwrap()) {
-            Z_angle -= 0.01;
-        }
-        if *(window.keys_state.get(&Key::Q).unwrap()) {
-            Z_angle += 0.01;
-        }
+        // if *(window.keys_state.get(&Key::A).unwrap()) {
+        //     y_angle -= 0.02;
+        // }
+        // if *(window.keys_state.get(&Key::D).unwrap()) {
+        //     y_angle += 0.02;
+        // }
+        // if *(window.keys_state.get(&Key::W).unwrap()) {
+        //     x_angle -= 0.02;
+        // }
+        // if *(window.keys_state.get(&Key::S).unwrap()) {
+        //     x_angle += 0.02;
+        // }
+        // if *(window.keys_state.get(&Key::E).unwrap()) {
+        //     z_angle -= 0.02;
+        // }
+        // if *(window.keys_state.get(&Key::Q).unwrap()) {
+        //     z_angle += 0.02;
+        // }
         if *(window.keys_state.get(&Key::V).unwrap()) {
             render_type = gl::POINT;
         }
@@ -138,9 +151,9 @@ fn main() {
             render_type = gl::FILL;
         }
         if *(window.keys_state.get(&Key::R).unwrap()) {
-            Z_angle = 0.0;
-            X_angle = 0.0;
-            Y_angle = 0.0;
+            z_angle = 0.0;
+            x_angle = 0.0;
+            y_angle = 0.0;
         }
         if *(window
             .mouse_state

@@ -1,15 +1,18 @@
-use std::f32::consts::PI;
+use cgmath::num_traits::ops::mul_add;
+
+use crate::my_lib::vec3::Vec3;
+use std::{
+    f32::{self, consts::PI},
+    ops::Mul,
+    process::Output,
+};
 
 #[derive(Debug, Clone)]
-pub struct Matrice4<T> {
+pub struct Matrix4<T> {
     pub value: [T; 16],
 }
 
-pub fn deg_to_rad(value: f32) -> f32 {
-    value * (PI / 180.0)
-}
-
-impl<T: Default> Default for Matrice4<T> {
+impl<T: Default> Default for Matrix4<T> {
     fn default() -> Self {
         Self {
             value: std::array::from_fn(|_| T::default()),
@@ -17,19 +20,17 @@ impl<T: Default> Default for Matrice4<T> {
     }
 }
 
-impl<T: Default> Matrice4<T> {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
+// impl<T> Mul<Output = Vec3> for Matrix4<f32>
+// where T: std::ops::Mul<Output = Matrix4<f32>, {
+//     fn mul(self, rhs: Vec3) -> Matrix4<f32> {
+//         Matrix4
+//     }
+// }
 
-impl<T: Default> Matrice4<T>
+// Matrices Preset
+impl<T: Default> Matrix4<T>
 where
-    T: From<f32>
-        + std::ops::Mul<Output = T>
-        + Copy
-        + std::ops::Add<Output = T>
-        + std::ops::MulAssign,
+    T: From<f32> + Copy,
 {
     pub fn identity() -> Self {
         let mut value = [T::default(); 16];
@@ -40,11 +41,58 @@ where
         Self { value }
     }
 
-    pub fn scale(&mut self, scale: T) -> Matrice4<T> {
-        let mut res: Matrice4<T> = Matrice4::<T>::identity();
-        res.value[0] *= scale;
-        res.value[5] *= scale;
-        res.value[10] *= scale;
+    pub fn look_at(cam_pos: Vec3, target_pos: Vec3, up: Vec3) -> Matrix4<f32> {
+        let cam_dir = Vec3::normalize(cam_pos.clone() - target_pos);
+        let cam_right = Vec3::normalize(Vec3::cross(up, cam_dir.clone()));
+        let cam_up = Vec3::cross(cam_dir.clone(), cam_right.clone());
+        let mut cam = Matrix4 {
+            value: [
+                cam_right.x,
+                cam_right.y,
+                cam_right.z,
+                0.0f32,
+                cam_up.x,
+                cam_up.y,
+                cam_up.z,
+                0.0f32,
+                cam_dir.x,
+                cam_dir.y,
+                cam_dir.z,
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                1.0f32,
+            ],
+        };
+        let mut pos_matrix = Matrix4::identity();
+        pos_matrix.value[12] = -cam_pos.x;
+        pos_matrix.value[13] = -cam_pos.y;
+        pos_matrix.value[14] = -cam_pos.z;
+
+        cam.value = cam.multiply(pos_matrix).value;
+        cam
+    }
+}
+
+// Matrices Methods
+impl<T: Default> Matrix4<T>
+where
+    T: From<f32>
+        + std::ops::Mul<Output = T>
+        + Copy
+        + std::ops::Add<Output = T>
+        + std::ops::MulAssign,
+{
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn scale(&mut self, scale: T) -> Matrix4<T> {
+        let mut res: Matrix4<T> = Matrix4::<T>::identity();
+        res.value[0] = scale;
+        res.value[5] = scale;
+        res.value[10] = scale;
         self.multiply(res)
     }
 
@@ -64,7 +112,7 @@ where
         let sin_x = f32::sin(x);
         let cos_y = f32::cos(y);
         let sin_y = f32::sin(y);
-        let mut rot_mat: Matrice4<T> = Matrice4::identity();
+        let mut rot_mat: Matrix4<T> = Matrix4::identity();
         rot_mat.value[0] = T::from(cos_z * cos_y);
         rot_mat.value[1] = T::from((cos_z * sin_y * sin_x) - (sin_z * cos_x));
         rot_mat.value[2] = T::from((cos_z * sin_y * cos_x) + (sin_z * sin_x));
@@ -77,8 +125,8 @@ where
         self.value = self.multiply(rot_mat).value;
     }
 
-    pub fn multiply(&mut self, m: Matrice4<T>) -> Matrice4<T> {
-        let mut res: Matrice4<T> = Matrice4::default();
+    pub fn multiply(&mut self, m: Matrix4<T>) -> Matrix4<T> {
+        let mut res: Matrix4<T> = Matrix4::default();
         for y in 0..4 {
             for i in 0..4 {
                 res.value[i + (y * 4)] = sub_mult_proc(
@@ -106,4 +154,8 @@ where
     T: std::ops::Mul<Output = T> + Copy + std::ops::Add<Output = T>,
 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]
+}
+
+pub fn deg_to_rad(value: f32) -> f32 {
+    value * (PI / 180.0)
 }

@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::my_lib::matrice::Matrix4;
+use crate::my_lib::vec3::Vec3;
 use glfw::{Action, Context, Key, MouseButton, WindowEvent};
 
 pub struct MouseState {
