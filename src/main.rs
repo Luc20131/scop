@@ -97,10 +97,13 @@ fn main() {
     //     z: 0.0,
     // });
     // println!("View : {:?}", view);
+    unsafe {
+        gl::Enable(gl::DEPTH_TEST);
+    }
     while !window.should_close() {
         unsafe {
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::PolygonMode(gl::FRONT_AND_BACK, render_type);
             let view = camera.move_cam(Vec3 {
                 x: 0.01,
@@ -123,24 +126,24 @@ fn main() {
             time = window.update_title(time);
         }
         window.update();
-        // if *(window.keys_state.get(&Key::A).unwrap()) {
-        //     y_angle -= 0.02;
-        // }
-        // if *(window.keys_state.get(&Key::D).unwrap()) {
-        //     y_angle += 0.02;
-        // }
-        // if *(window.keys_state.get(&Key::W).unwrap()) {
-        //     x_angle -= 0.02;
-        // }
-        // if *(window.keys_state.get(&Key::S).unwrap()) {
-        //     x_angle += 0.02;
-        // }
-        // if *(window.keys_state.get(&Key::E).unwrap()) {
-        //     z_angle -= 0.02;
-        // }
-        // if *(window.keys_state.get(&Key::Q).unwrap()) {
-        //     z_angle += 0.02;
-        // }
+        if *(window.keys_state.get(&Key::A).unwrap()) {
+            y_angle -= 0.02;
+        }
+        if *(window.keys_state.get(&Key::D).unwrap()) {
+            y_angle += 0.02;
+        }
+        if *(window.keys_state.get(&Key::W).unwrap()) {
+            x_angle -= 0.02;
+        }
+        if *(window.keys_state.get(&Key::S).unwrap()) {
+            x_angle += 0.02;
+        }
+        if *(window.keys_state.get(&Key::E).unwrap()) {
+            z_angle -= 0.02;
+        }
+        if *(window.keys_state.get(&Key::Q).unwrap()) {
+            z_angle += 0.02;
+        }
         if *(window.keys_state.get(&Key::V).unwrap()) {
             render_type = gl::POINT;
         }

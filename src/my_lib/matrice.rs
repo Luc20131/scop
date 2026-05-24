@@ -73,6 +73,31 @@ where
         cam.value = cam.multiply(pos_matrix).value;
         cam
     }
+
+    /// Create perspective matrix,
+    /// fov need to be in radians
+    pub fn perspective(aspect: f32, fov: f32, near: f32, far: f32) -> Matrix4<f32> {
+        Matrix4 {
+            value: [
+                (1.0 / (aspect * f32::tan(fov / 2.0))),
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                (1.0 / (f32::tan(fov / 2.0))),
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                ((far + near) / (near - far)),
+                ((2.0 * far * near) / (near - far)),
+                0.0f32,
+                0.0f32,
+                1.0f32,
+                0.0f32,
+            ],
+        }
+    }
 }
 
 // Matrices Methods
