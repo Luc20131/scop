@@ -1,9 +1,18 @@
-use glfw::{Action, Context, Key, WindowEvent};
+use std::collections::HashMap;
+use glfw::{Action, Context, Key, MouseButton, WindowEvent};
+
+pub struct MouseState {
+    pub mouse_buttons: HashMap<MouseButton, bool>,
+    pub cursor_pos: (f64, f64),
+}
 
 pub struct Window {
     glfw: glfw::Glfw,
     window_handle: glfw::PWindow,
     events: glfw::GlfwReceiver<(f64, WindowEvent)>,
+    frame_count: u32,
+    pub keys_state: HashMap<Key, bool>,
+    pub mouse_state: MouseState,
 }
 
 impl Window {
@@ -13,14 +22,35 @@ impl Window {
         let (mut window, events) = glfw
             .create_window(width, height, title, glfw::WindowMode::Windowed)
             .expect("Failed to create GLFW window");
-
         window.set_framebuffer_size_polling(true);
         window.set_key_polling(true);
+        window.set_cursor_pos_polling(true);
 
         Window {
             glfw,
             window_handle: window,
             events,
+            frame_count: 0,
+            keys_state: HashMap::from([
+                (Key::D, false),
+                (Key::A, false),
+                (Key::W, false),
+                (Key::S, false),
+                (Key::Q, false),
+                (Key::E, false),
+                (Key::R, false),
+                (Key::V, false),
+                (Key::B, false),
+                (Key::N, false),
+            ]),
+            mouse_state: MouseState {
+                mouse_buttons: HashMap::from([
+                    (MouseButton::Left, false),
+                    (MouseButton::Right, false),
+                    (MouseButton::Middle, false),
+                ]),
+                cursor_pos: (0.0, 0.0),
+            },
         }
     }
 
@@ -46,13 +76,83 @@ impl Window {
     fn process_events(&mut self) {
         for (_, event) in glfw::flush_messages(&self.events) {
             match event {
-                glfw::WindowEvent::FramebufferSize(width, height) => {
-                    // make sure the viewport matches the new window dimensions; note that width and
-                    // height will be significantly larger than specified on retina displays.
-                    unsafe { gl::Viewport(0, 0, width, height) }
-                }
+                glfw::WindowEvent::FramebufferSize(width, height) => unsafe {
+                    gl::Viewport(0, 0, width, height)
+                },
                 glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
                     self.window_handle.set_should_close(true)
+                }
+                glfw::WindowEvent::Key(Key::D, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::D).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::D, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::D).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::A, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::A).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::A, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::A).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::W, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::W).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::W, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::W).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::S, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::S).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::S, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::S).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::Q, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::Q).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::Q, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::Q).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::E, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::E).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::E, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::E).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::R, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::R).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::R, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::R).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::V, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::V).insert_entry(true);
+                    self.keys_state.entry(Key::B).insert_entry(false);
+                    self.keys_state.entry(Key::N).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::B, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::V).insert_entry(false);
+                    self.keys_state.entry(Key::B).insert_entry(true);
+                    self.keys_state.entry(Key::N).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::N, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::V).insert_entry(false);
+                    self.keys_state.entry(Key::B).insert_entry(false);
+                    self.keys_state.entry(Key::N).insert_entry(true);
+                }
+                glfw::WindowEvent::CursorPos(x, y) => {
+                    self.mouse_state.cursor_pos = (x, y);
+                }
+                glfw::WindowEvent::MouseButton(MouseButton::Left, Action::Press, _) => {
+                    self.mouse_state
+                        .mouse_buttons
+                        .entry(MouseButton::Left)
+                        .insert_entry(true);
+                }
+                glfw::WindowEvent::MouseButton(MouseButton::Left, Action::Release, _) => {
+                    self.mouse_state
+                        .mouse_buttons
+                        .entry(MouseButton::Left)
+                        .insert_entry(false);
                 }
                 _ => {}
             }
@@ -62,4 +162,28 @@ impl Window {
     pub fn get_time(&mut self) -> f64 {
         self.glfw.get_time()
     }
+
+    pub fn update_title(&mut self, last_time: f64) -> f64 {
+        self.frame_count += 1;
+        let time = self.glfw.get_time();
+        if time - last_time >= 1.0 {
+            let fps = self.frame_count.to_string();
+            let fps_str: &str = &fps;
+            self.window_handle.set_title(fps_str);
+            self.frame_count = 0;
+            return time;
+        }
+        last_time
+    }
+
+    // fn create_cursor(&mut self) {
+    // unsafe {
+    // let cursor: Cursor = Cursor {
+    //     ptr: glfwCreateStandardCursor(StandardCursor::Arrow as i32),
+    // };
+    // let cursor2 =
+    // let cursor = Cursor::standard(glfw::StandardCursor::Arrow);
+    // let cursor = glfw::ffi::glfwCreateStandardCursor(StandardCursor::Arrow as i32);
+    // }
+    // }
 }

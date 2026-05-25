@@ -1,25 +1,11 @@
-use std::f32::consts::PI;
+use crate::my_lib::vec3::Vec3;
 
 #[derive(Debug, Clone)]
-pub struct Matrice4<T> {
+pub struct Matrix4<T> {
     pub value: [T; 16],
 }
 
-// impl<T: Default> std::ops::Index<usize> for Matrice4<T>
-// where
-//     T: ?Sized + Clone,
-// {
-//     type Output = T;
-//     fn index(&self, i: usize) -> T {
-//         self.value[i]
-//     }
-// }
-
-pub fn deg_to_rad(value: f32) -> f32 {
-    value * (PI / 180.0)
-}
-
-impl<T: Default> Default for Matrice4<T> {
+impl<T: Default> Default for Matrix4<T> {
     fn default() -> Self {
         Self {
             value: std::array::from_fn(|_| T::default()),
@@ -27,19 +13,10 @@ impl<T: Default> Default for Matrice4<T> {
     }
 }
 
-impl<T: Default> Matrice4<T> {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl<T: Default> Matrice4<T>
+// Matrices Preset
+impl<T: Default> Matrix4<T>
 where
-    T: From<f32>
-        + std::ops::Mul<Output = T>
-        + Copy
-        + std::ops::Add<Output = T>
-        + std::ops::MulAssign,
+    T: From<f32> + Copy,
 {
     pub fn identity() -> Self {
         let mut value = [T::default(); 16];
@@ -50,11 +27,84 @@ where
         Self { value }
     }
 
-    pub fn scale(&mut self, scale: T) -> Matrice4<T> {
-        let mut res: Matrice4<T> = Matrice4::<T>::identity();
-        res.value[0] *= scale;
-        res.value[5] *= scale;
-        res.value[10] *= scale;
+    /// Create view matrix
+    pub fn look_at(cam_pos: Vec3, target_pos: Vec3, up: Vec3) -> Matrix4<f32> {
+        let cam_dir = Vec3::normalized(cam_pos.clone() - target_pos);
+        let cam_right = Vec3::normalized(Vec3::cross(up, cam_dir.clone()));
+        let cam_up = Vec3::cross(cam_dir.clone(), cam_right.clone());
+        let mut cam = Matrix4 {
+            value: [
+                cam_right.x,
+                cam_right.y,
+                cam_right.z,
+                0.0f32,
+                cam_up.x,
+                cam_up.y,
+                cam_up.z,
+                0.0f32,
+                cam_dir.x,
+                cam_dir.y,
+                cam_dir.z,
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                1.0f32,
+            ],
+        };
+        let mut pos_matrix = Matrix4::identity();
+        pos_matrix.value[3] = -cam_pos.x;
+        pos_matrix.value[7] = -cam_pos.y;
+        pos_matrix.value[11] = -cam_pos.z;
+
+        cam.value = cam.multiply(pos_matrix).value;
+        cam
+    }
+
+    /// Create perspective matrix,
+    /// fov need to be in radians
+    pub fn perspective(aspect: f32, fov: f32, near: f32, far: f32) -> Matrix4<f32> {
+        Matrix4 {
+            value: [
+                (1.0 / (aspect * f32::tan(fov / 2.0))),
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                (1.0 / (f32::tan(fov / 2.0))),
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                0.0f32,
+                ((far + near) / (near - far)),
+                ((2.0 * far * near) / (near - far)),
+                0.0f32,
+                0.0f32,
+                -1.0f32,
+                0.0f32,
+            ],
+        }
+    }
+}
+
+// Matrices Methods
+impl<T: Default> Matrix4<T>
+where
+    T: From<f32>
+        + std::ops::Mul<Output = T>
+        + Copy
+        + std::ops::Add<Output = T>
+        + std::ops::MulAssign,
+{
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn scale(&mut self, scale: T) -> Matrix4<T> {
+        let mut res: Matrix4<T> = Matrix4::<T>::identity();
+        res.value[0] = scale;
+        res.value[5] = scale;
+        res.value[10] = scale;
         self.multiply(res)
     }
 
@@ -74,13 +124,7 @@ where
         let sin_x = f32::sin(x);
         let cos_y = f32::cos(y);
         let sin_y = f32::sin(y);
-
-        // let mut rot_x: Matrice4<T> = Matrice4::identity();
-
-        // let mut rot_y: Matrice4<T> = Matrice4::identity();
-
-        let mut rot_mat: Matrice4<T> = Matrice4::identity();
-
+        let mut rot_mat: Matrix4<T> = Matrix4::identity();
         rot_mat.value[0] = T::from(cos_z * cos_y);
         rot_mat.value[1] = T::from((cos_z * sin_y * sin_x) - (sin_z * cos_x));
         rot_mat.value[2] = T::from((cos_z * sin_y * cos_x) + (sin_z * sin_x));
@@ -90,33 +134,11 @@ where
         rot_mat.value[8] = T::from(-sin_y);
         rot_mat.value[9] = T::from(cos_y * sin_x);
         rot_mat.value[10] = T::from(cos_y * cos_x);
-        // let mut res = Matrice4::identity();
-        // if x != 0.0 {
-        //     rot_x.value[5] = T::from(cos_x);
-        //     rot_x.value[6] = T::from(-sin_x);
-        //     rot_x.value[9] = T::from(sin_x);
-        //     rot_x.value[10] = T::from(cos_x);
-        // }
-        // if y != 0.0 {
-        //     rot_y.value[0] = T::from(cos_y);
-        //     rot_y.value[2] = T::from(-sin_y);
-        //     rot_y.value[8] = T::from(sin_y);
-        //     rot_y.value[10] = T::from(cos_y);
-        // }
-        // if z != 0.0 {
-        //     rot_z.value[0] = T::from(cos_z);
-        //     rot_z.value[1] = T::from(-sin_z);
-        //     rot_z.value[4] = T::from(sin_z);
-        //     rot_z.value[5] = T::from(cos_z);
-        // }
-        // res.value = res.multiply(rot_x).value;
-        // res.value = rot_y.multiply(res.clone()).value;
-        // res.value = res.multiply(rot_z).value;
         self.value = self.multiply(rot_mat).value;
     }
 
-    pub fn multiply(&mut self, m: Matrice4<T>) -> Matrice4<T> {
-        let mut res: Matrice4<T> = Matrice4::default();
+    pub fn multiply(&mut self, m: Matrix4<T>) -> Matrix4<T> {
+        let mut res: Matrix4<T> = Matrix4::default();
         for y in 0..4 {
             for i in 0..4 {
                 res.value[i + (y * 4)] = sub_mult_proc(
