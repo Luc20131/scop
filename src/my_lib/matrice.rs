@@ -1,11 +1,4 @@
-use cgmath::num_traits::ops::mul_add;
-
 use crate::my_lib::vec3::Vec3;
-use std::{
-    f32::{self, consts::PI},
-    ops::Mul,
-    process::Output,
-};
 
 #[derive(Debug, Clone)]
 pub struct Matrix4<T> {
@@ -19,13 +12,6 @@ impl<T: Default> Default for Matrix4<T> {
         }
     }
 }
-
-// impl<T> Mul<Output = Vec3> for Matrix4<f32>
-// where T: std::ops::Mul<Output = Matrix4<f32>, {
-//     fn mul(self, rhs: Vec3) -> Matrix4<f32> {
-//         Matrix4
-//     }
-// }
 
 // Matrices Preset
 impl<T: Default> Matrix4<T>
@@ -41,9 +27,10 @@ where
         Self { value }
     }
 
+    /// Create view matrix
     pub fn look_at(cam_pos: Vec3, target_pos: Vec3, up: Vec3) -> Matrix4<f32> {
-        let cam_dir = Vec3::normalize(cam_pos.clone() - target_pos);
-        let cam_right = Vec3::normalize(Vec3::cross(up, cam_dir.clone()));
+        let cam_dir = Vec3::normalized(cam_pos.clone() - target_pos);
+        let cam_right = Vec3::normalized(Vec3::cross(up, cam_dir.clone()));
         let cam_up = Vec3::cross(cam_dir.clone(), cam_right.clone());
         let mut cam = Matrix4 {
             value: [
@@ -66,9 +53,9 @@ where
             ],
         };
         let mut pos_matrix = Matrix4::identity();
-        pos_matrix.value[12] = -cam_pos.x;
-        pos_matrix.value[13] = -cam_pos.y;
-        pos_matrix.value[14] = -cam_pos.z;
+        pos_matrix.value[3] = -cam_pos.x;
+        pos_matrix.value[7] = -cam_pos.y;
+        pos_matrix.value[11] = -cam_pos.z;
 
         cam.value = cam.multiply(pos_matrix).value;
         cam
@@ -93,7 +80,7 @@ where
                 ((2.0 * far * near) / (near - far)),
                 0.0f32,
                 0.0f32,
-                1.0f32,
+                -1.0f32,
                 0.0f32,
             ],
         }
@@ -179,8 +166,4 @@ where
     T: std::ops::Mul<Output = T> + Copy + std::ops::Add<Output = T>,
 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]
-}
-
-pub fn deg_to_rad(value: f32) -> f32 {
-    value * (PI / 180.0)
 }

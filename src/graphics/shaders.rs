@@ -54,7 +54,7 @@ impl Shader {
     pub fn set_matrix4(&mut self, name: &CString, matrix: Matrix4<f32>) {
         unsafe {
             let matrix_loc = gl::GetUniformLocation(self.id, name.as_ptr());
-            gl::UniformMatrix4fv(matrix_loc, 1, gl::FALSE, matrix.value.as_ptr());
+            gl::UniformMatrix4fv(matrix_loc, 1, gl::TRUE, matrix.value.as_ptr());
         }
     }
 }

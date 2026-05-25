@@ -9,6 +9,7 @@ use scop::my_lib::bmp_parser::image_loader;
 use scop::my_lib::matrice::Matrix4;
 use scop::my_lib::vec3::Vec3;
 use std::env;
+use std::f32::consts::PI;
 use std::ffi::CString;
 use std::fs;
 use std::mem;
@@ -85,18 +86,21 @@ fn main() {
     color_attribute.enable();
 
     let mut time = window.get_time();
-    let mut y_angle: f32 = 0.0;
-    let mut x_angle: f32 = 0.0;
-    let mut z_angle: f32 = 0.0;
+    let mut yaw: f32 = 0.0;
+    let mut pitch: f32 = 0.0;
+    let mut roll: f32 = 0.0;
     let scaling: f32 = 0.1;
     let mut render_type = gl::LINE;
     let mut camera: Camera = Camera::new();
-    // let mut view = camera.set_pos(Vec3 {
-    //     x: -500.0,
-    //     y: 0.0,
-    //     z: 0.0,
-    // });
+    camera.set_pos(Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 100.0,
+    });
     // println!("View : {:?}", view);
+    //
+    let proj: Matrix4<f32> = Matrix4::<f32>::perspective(PI / 2.0, 800.0 / 600.0, 0.1, 100.0);
+    println!("Proj: {:?}", proj);
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
     }
@@ -105,12 +109,20 @@ fn main() {
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::PolygonMode(gl::FRONT_AND_BACK, render_type);
-            let view = camera.move_cam(Vec3 {
-                x: 0.01,
-                y: 0.0,
-                z: 0.0,
-            });
-            shaders.set_matrix4(&CString::new("view").unwrap(), view);
+            camera.move_cam(
+                Vec3 {
+                    x: 0.0,
+                    y: 0.0,
+                    z: 10.0,
+                },
+                Vec3 {
+                    x: pitch,
+                    y: yaw,
+                    z: roll,
+                },
+            );
+            shaders.set_matrix4(&CString::new("projection").unwrap(), proj.clone());
+            shaders.set_matrix4(&CString::new("view").unwrap(), camera.view.clone());
             let mut transform: Matrix4<f32> = Matrix4::identity();
             transform.translate(0.0, 0.0, 0.0);
             transform = transform.scale(scaling);
@@ -126,23 +138,30 @@ fn main() {
             time = window.update_title(time);
         }
         window.update();
-        if *(window.keys_state.get(&Key::A).unwrap()) {
-            y_angle -= 0.02;
-        }
-        if *(window.keys_state.get(&Key::D).unwrap()) {
-            y_angle += 0.02;
+        if *(window.keys_state.get(&Key::S).unwrap()) {
+            pitch -= 2.0;
+            if pitch < -89.0 {
+                pitch = -89.0;
+            }
         }
         if *(window.keys_state.get(&Key::W).unwrap()) {
-            x_angle -= 0.02;
+            pitch += 2.0;
+            if pitch > 89.0 {
+                pitch = 89.0;
+            }
         }
-        if *(window.keys_state.get(&Key::S).unwrap()) {
-            x_angle += 0.02;
+        if *(window.keys_state.get(&Key::D).unwrap()) {
+            yaw += 2.0;
+        }
+        if *(window.keys_state.get(&Key::A).unwrap()) {
+            yaw -= 2.0;
+
         }
         if *(window.keys_state.get(&Key::E).unwrap()) {
-            z_angle -= 0.02;
+            roll -= 2.0;
         }
         if *(window.keys_state.get(&Key::Q).unwrap()) {
-            z_angle += 0.02;
+            roll += 2.0;
         }
         if *(window.keys_state.get(&Key::V).unwrap()) {
             render_type = gl::POINT;
@@ -154,9 +173,9 @@ fn main() {
             render_type = gl::FILL;
         }
         if *(window.keys_state.get(&Key::R).unwrap()) {
-            z_angle = 0.0;
-            x_angle = 0.0;
-            y_angle = 0.0;
+            roll = 0.0;
+            pitch = 0.0;
+            yaw = 0.0;
         }
         if *(window
             .mouse_state
