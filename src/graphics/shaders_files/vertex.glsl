@@ -6,6 +6,7 @@ out vec3 ourColor; // output a color to the fragment shader
 uniform mat4 transform;
 uniform mat4 view;
 uniform mat4 projection;
+
 void main()
 {
     gl_Position = projection * view * transform * vec4(aPos, 1.0f);

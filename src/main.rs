@@ -89,7 +89,7 @@ fn main() {
     let mut yaw: f32 = 0.0;
     let mut pitch: f32 = 0.0;
     let mut roll: f32 = 0.0;
-    let scaling: f32 = 0.1;
+    let scaling: f32 = 0.3;
     let mut render_type = gl::LINE;
     let mut camera: Camera = Camera::new();
     camera.set_pos(Vec3 {
@@ -155,7 +155,6 @@ fn main() {
         }
         if *(window.keys_state.get(&Key::A).unwrap()) {
             yaw -= 2.0;
-
         }
         if *(window.keys_state.get(&Key::E).unwrap()) {
             roll -= 2.0;
