@@ -1,11 +1,14 @@
+mod obj;
 mod parser;
 use gl::types::*;
 use glfw::MouseButton;
 use scop::graphics::camera::Camera;
 use scop::graphics::gl_wrapper::*;
+use scop::graphics::mesh::Mesh;
+use scop::graphics::mesh::{Normal, Vertex};
 use scop::graphics::shaders::Shader;
+use scop::graphics::texture::Texture;
 use scop::graphics::window::Window;
-use scop::my_lib::bmp_parser::image_loader;
 use scop::my_lib::matrice::Matrix4;
 use scop::my_lib::vec3::Vec3;
 use std::env;
@@ -13,29 +16,39 @@ use std::f32::consts::PI;
 use std::ffi::CString;
 use std::fs;
 use std::mem;
+use std::process::ExitCode;
 use std::ptr;
-use std::str::Lines;
 extern crate glfw;
 use self::glfw::Key;
 
 fn main() {
+    if env::args().size_hint().0 < 2 {
+        println!("Error: Missing argument");
+        ExitCode::FAILURE;
+    }
     println!(
         "Loading {}...",
         env::args().nth(1).expect("Failed to read first argument")
     );
-    let mut obj: parser::Obj = parser::Obj::new();
+    let mut obj: obj::Obj = obj::Obj::new();
     let content = fs::read_to_string(env::args().nth(1).unwrap()).unwrap();
-    let lines: Lines = content.lines();
-    for line in lines {
-        obj.add_data(line);
-    }
-    obj.build_indices();
-    obj.print_data();
-    image_loader("./resources/oui.bmp");
-    let mut window = Window::new(1920, 1080, &obj.name);
+    // let lines: Lines = content.lines();
+    // for line in lines {
+    //     obj.read_data(line);
+    // }
+    // image_loader("./resources/oui.bmp");
 
     let vertices: &[GLfloat] = obj.v.as_slice();
     let indices: &[u32] = obj.indices.as_slice();
+    let tex: Vec<Texture> = vec![Texture::new("./resources/oui.bmp")];
+
+    let v_oui: Vec<Vertex> = vec![Vertex::new()];
+    let n_oui: Vec<Normal>;
+
+    let mesh: Mesh = Mesh::new(v_oui, n_oui, tex);
+
+    let mut window = Window::new(1920, 1080, &obj.name);
+
     //INIT OpenGL
     window.init_gl();
 

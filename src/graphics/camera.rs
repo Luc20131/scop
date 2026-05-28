@@ -54,4 +54,6 @@ impl Camera {
         self.pos = pos;
         self.rotate_cam(angles);
     }
+
+    // TODO zoom and camera translation 
 }

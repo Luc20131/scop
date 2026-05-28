@@ -1,7 +1,9 @@
 use crate::graphics::gl_wrapper::{BufferObject, Vao};
 use crate::graphics::texture::Texture;
 use crate::my_lib::vec3::Vec3;
-type Normal = Vec3;
+use gl::types::GLfloat;
+
+pub type Normal = Vec3;
 
 pub struct Vertex {
     position: Vec3,
@@ -33,6 +35,18 @@ impl Mesh {
     fn setup_mesh(&mut self) {
         self.vao.bind();
         self.vbo.bind();
+        self.vbo
+            .store_f32_data(&(self.pos_vertices_slice().as_slice()));
         self.ebo.bind();
+    }
+
+    fn pos_vertices_slice(&self) -> Vec<f32> {
+        let mut pos: Vec<f32> = Vec::new();
+        for elem in self.vertices.iter() {
+            pos.push(elem.position.x);
+            pos.push(elem.position.y);
+            pos.push(elem.position.z);
+        }
+        pos
     }
 }
