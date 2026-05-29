@@ -1,7 +1,8 @@
+use std::fs;
+
 use crate::graphics::gl_wrapper::{BufferObject, Vao};
 use crate::graphics::texture::Texture;
 use crate::my_lib::vec3::Vec3;
-use gl::types::GLfloat;
 
 pub type Normal = Vec3;
 
@@ -12,6 +13,7 @@ pub struct Vertex {
 }
 
 pub struct Mesh {
+    pub name: String,
     pub vertices: Vec<Vertex>,
     pub normal: Vec<Normal>,
     pub texture: Vec<Texture>,
@@ -23,6 +25,7 @@ pub struct Mesh {
 impl Mesh {
     pub fn new(vertices: Vec<Vertex>, normal: Vec<Normal>, texture: Vec<Texture>) -> Self {
         Self {
+            name: "Undefined".to_string(),
             vertices,
             normal,
             texture,
@@ -30,6 +33,13 @@ impl Mesh {
             vbo: BufferObject::new(gl::ARRAY_BUFFER, gl::STATIC_DRAW),
             ebo: BufferObject::new(gl::ELEMENT_ARRAY_BUFFER, gl::STATIC_DRAW),
         }
+    }
+
+    pub fn new_from_file(path: &str) -> Self {
+        let vertices: Vec<Vertex>;
+        let normal: Vec<Normal>;
+        let texture: Vec<Texture>;
+        !todo!("Parsing")
     }
 
     fn setup_mesh(&mut self) {

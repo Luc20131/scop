@@ -113,7 +113,7 @@ fn main() {
     // println!("View : {:?}", view);
     //
     let proj: Matrix4<f32> = Matrix4::<f32>::perspective(PI / 2.0, 800.0 / 600.0, 0.1, 100.0);
-    println!("Proj: {:?}", proj);
+    dbg!(proj);
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
     }
