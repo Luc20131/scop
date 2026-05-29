@@ -23,9 +23,14 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn new(vertices: Vec<Vertex>, normal: Vec<Normal>, texture: Vec<Texture>) -> Self {
+    pub fn new(
+        name: String,   
+        vertices: Vec<Vertex>,
+        normal: Vec<Normal>,
+        texture: Vec<Texture>,
+    ) -> Self {
         Self {
-            name: "Undefined".to_string(),
+            name,
             vertices,
             normal,
             texture,
@@ -33,13 +38,6 @@ impl Mesh {
             vbo: BufferObject::new(gl::ARRAY_BUFFER, gl::STATIC_DRAW),
             ebo: BufferObject::new(gl::ELEMENT_ARRAY_BUFFER, gl::STATIC_DRAW),
         }
-    }
-
-    pub fn new_from_file(path: &str) -> Self {
-        let vertices: Vec<Vertex>;
-        let normal: Vec<Normal>;
-        let texture: Vec<Texture>;
-        !todo!("Parsing")
     }
 
     fn setup_mesh(&mut self) {

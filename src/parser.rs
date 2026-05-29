@@ -1,29 +1,54 @@
-use std::str::SplitWhitespace;
+use std::{
+    fs::read_to_string,
+    ops::Add,
+    path::{Path, PathBuf},
+    str::SplitWhitespace,
+};
 
-use scop::graphics::mesh::Mesh;
-
-pub fn read_data(line: &str) -> Mesh {
-    let mut mesh = Mesh::new(vertices, normal, texture);
-    let mut words: SplitWhitespace<'_> = line.split_whitespace();
-    match words.next() {
-        Some("o") => {
-            mesh.name = extract_name(line);
-        }
-        // Some("v") => self.extract_vertices(line),
-        // Some("vt") => self.extract_texture(line),
-        // Some("vn") => self.extract_normal(line),
-        // Some("f") => self.extract_face(line),
-        Some(_) => {}
-        None => {}
-    }
-    mesh
+#[derive(Debug)]
+struct MtlFile {
+    path: PathBuf,
+    content: String,
 }
 
-pub fn extract_name(line: &str) -> String {
-    let mut words: SplitWhitespace<'_> = line.split_whitespace();
-    let ln_count: usize = words.clone().count();
-    if ln_count >= 2 {
-        return words.nth(1).expect("Name undefined").to_string();
+#[derive(Debug)]
+pub struct ObjFile {
+    pub name: String,
+    content: String,
+    mtl_files: Vec<MtlFile>,
+}
+
+impl ObjFile {
+    pub fn new(path: &Path) -> Self {
+        Self {
+            name: "Undefined".to_string(),
+            content: ObjFile::obj_file_read(path),
+            mtl_files: vec![],
+        }
     }
-    "Undefined".to_string()
+
+    fn obj_file_read(path: &Path) -> String {
+        read_to_string(path).unwrap_or("empty file".to_string())
+    }
+
+    pub fn grep_mtl_files(&mut self) {
+        let lines = self.content.lines();
+        let mut files: Vec<MtlFile> = vec![];
+        for line in lines {
+            if line.contains("mtllib ") {
+                let mut words: SplitWhitespace<'_> = line.split_whitespace();
+                let path = PathBuf::from(words.next_back().unwrap_or("No path found"));
+                let mtl_file: MtlFile = MtlFile {
+                    path: (path.clone()),
+                    content: (read_to_string(
+                        "./".to_string().add(path.to_str().unwrap_or_default()),
+                    )
+                    .unwrap_or("empty file".to_string())),
+                };
+                files.push(mtl_file);
+            }
+        }
+        println!("files: {:?}", files);
+        self.mtl_files = files;
+    }
 }

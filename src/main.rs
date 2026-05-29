@@ -1,21 +1,16 @@
-mod obj;
 mod parser;
 use gl::types::*;
-use glfw::MouseButton;
 use scop::graphics::camera::Camera;
 use scop::graphics::gl_wrapper::*;
-use scop::graphics::mesh::Mesh;
-use scop::graphics::mesh::{Normal, Vertex};
 use scop::graphics::shaders::Shader;
-use scop::graphics::texture::Texture;
 use scop::graphics::window::Window;
 use scop::my_lib::matrice::Matrix4;
 use scop::my_lib::vec3::Vec3;
 use std::env;
 use std::f32::consts::PI;
 use std::ffi::CString;
-use std::fs;
 use std::mem;
+use std::path::Path;
 use std::process::ExitCode;
 use std::ptr;
 extern crate glfw;
@@ -26,26 +21,28 @@ fn main() {
         println!("Error: Missing argument");
         ExitCode::FAILURE;
     }
-    println!(
-        "Loading {}...",
-        env::args().nth(1).expect("Failed to read first argument")
-    );
-    let mut obj: obj::Obj = obj::Obj::new();
-    let content = fs::read_to_string(env::args().nth(1).unwrap()).unwrap();
+    let arg = env::args().nth(1).unwrap_or_default();
+    let obj_path: &Path = Path::new(&arg);
+    println!("Loading {}...", obj_path.file_name().unwrap().display());
+    let mut obj: parser::ObjFile = parser::ObjFile::new(&obj_path);
+    dbg!(&obj);
+
+    obj.grep_mtl_files();
+    // let content = fs::read_to_string(env::args().nth(1).unwrap()).unwrap();
     // let lines: Lines = content.lines();
     // for line in lines {
     //     obj.read_data(line);
     // }
     // image_loader("./resources/oui.bmp");
 
-    let vertices: &[GLfloat] = obj.v.as_slice();
-    let indices: &[u32] = obj.indices.as_slice();
-    let tex: Vec<Texture> = vec![Texture::new("./resources/oui.bmp")];
+    // let vertices: &[GLfloat] = obj.v.as_slice();
+    // let indices: &[u32] = obj.indices.as_slice();
+    // let tex: Vec<Texture> = vec![Texture::new("./resources/oui.bmp")];
 
-    let v_oui: Vec<Vertex> = vec![Vertex::new()];
-    let n_oui: Vec<Normal>;
+    // let v_oui: Vec<Vertex> = vec![Vertex::new()];
+    // let n_oui: Vec<Normal>;
 
-    let mesh: Mesh = Mesh::new(v_oui, n_oui, tex);
+    // let mesh: Mesh = Mesh::new(v_oui, n_oui, tex);
 
     let mut window = Window::new(1920, 1080, &obj.name);
 
@@ -62,11 +59,11 @@ fn main() {
 
     let vbo = BufferObject::new(gl::ARRAY_BUFFER, gl::STATIC_DRAW);
     vbo.bind();
-    vbo.store_f32_data(&vertices);
+    // vbo.store_f32_data(&vertices);
 
     let ebo = BufferObject::new(gl::ELEMENT_ARRAY_BUFFER, gl::STATIC_DRAW);
     ebo.bind();
-    ebo.store_u32_data(&indices);
+    // ebo.store_u32_data(&indices);
 
     let position_attribute = VertexAttribute::new(
         0,
@@ -110,10 +107,7 @@ fn main() {
         y: 0.0,
         z: 100.0,
     });
-    // println!("View : {:?}", view);
-    //
     let proj: Matrix4<f32> = Matrix4::<f32>::perspective(PI / 2.0, 800.0 / 600.0, 0.1, 100.0);
-    dbg!(proj);
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
     }
@@ -142,12 +136,12 @@ fn main() {
             // transform.rotate(x_angle, y_angle, z_angle);
             shaders.set_matrix4(&CString::new("transform").unwrap(), transform);
             shaders.use_prog();
-            gl::DrawElements(
-                gl::TRIANGLES,
-                indices.len() as GLsizei,
-                gl::UNSIGNED_INT,
-                ptr::null(),
-            );
+            // gl::DrawElements(
+            //     gl::TRIANGLES,
+            //     indices.len() as GLsizei,
+            //     gl::UNSIGNED_INT,
+            //     ptr::null(),
+            // );
             time = window.update_title(time);
         }
         window.update();
@@ -189,11 +183,5 @@ fn main() {
             pitch = 0.0;
             yaw = 0.0;
         }
-        if *(window
-            .mouse_state
-            .mouse_buttons
-            .get(&MouseButton::Left)
-            .unwrap())
-        {}
     }
 }

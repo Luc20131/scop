@@ -1,4 +1,10 @@
-use std::fs::read;
+use std::{
+    fs::read,
+    path::Path,
+    process::{ExitStatus, exit},
+};
+
+use crate::graphics::texture;
 
 #[repr(C)]
 #[derive(Debug)]
@@ -23,17 +29,16 @@ struct BmpImage<'a> {
     img_pixels: &'a [u8],
 }
 
-pub fn image_loader(path: &str) {
-    println!("Loading {}", path);
-    let img = read(path).expect("Failed to open image");
-    let img_name = path
-        .rsplit_once("/")
-        .unzip()
-        .1
-        .expect("Failed to split image's name");
-    let img_data = format_data(&img, img_name);
+pub fn image_loader(path: &Path) {
+    if !path.exists() {
+        eprintln!("Error: {} not found", path.to_str().unwrap_or_default());
+    }
+    dbg!("Loading {}", path.to_str());
+    let img = read(path.to_str().unwrap_or_default()).expect("Failed to open image");
+    let img_name = path.file_name().unwrap_or_default();
+    let img_data = format_data(&img, img_name.to_str().unwrap_or_default());
 
-    println!("{:?}", img_data.name);
+    dbg!(img_data.name);
 }
 
 fn format_data<'a>(content: &'a Vec<u8>, img_name: &'a str) -> BmpImage<'a> {
