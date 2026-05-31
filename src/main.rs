@@ -1,30 +1,27 @@
-mod parser;
 use gl::types::*;
 use scop::graphics::camera::Camera;
 use scop::graphics::gl_wrapper::*;
 use scop::graphics::shaders::Shader;
 use scop::graphics::window::Window;
-use scop::my_lib::matrice::Matrix4;
-use scop::my_lib::vec3::Vec3;
+use scop::math::matrix::Matrix4;
+use scop::math::vec3::Vec3;
+use scop::parsers::obj_parser::ObjFile;
 use std::env;
 use std::f32::consts::PI;
 use std::ffi::CString;
 use std::mem;
 use std::path::Path;
-use std::process::ExitCode;
 use std::ptr;
 extern crate glfw;
 use self::glfw::Key;
 
-fn main() {
+fn main() -> Result<(), String> {
     if env::args().size_hint().0 < 2 {
-        println!("Error: Missing argument");
-        ExitCode::FAILURE;
+        return Err("Missing argument".to_string());
     }
     let arg = env::args().nth(1).unwrap_or_default();
     let obj_path: &Path = Path::new(&arg);
-    println!("Loading {}...", obj_path.file_name().unwrap().display());
-    let mut obj: parser::ObjFile = parser::ObjFile::new(&obj_path);
+    let mut obj: ObjFile = ObjFile::new(&obj_path);
 
     obj.grep_mtl_files();
     dbg!(&obj);
@@ -184,4 +181,5 @@ fn main() {
             yaw = 0.0;
         }
     }
+    Ok(())
 }

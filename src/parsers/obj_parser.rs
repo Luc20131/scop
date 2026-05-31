@@ -1,34 +1,34 @@
 use std::{
     fs::read_to_string,
-    ops::Add,
+    io,
     path::{Path, PathBuf},
     str::SplitWhitespace,
 };
 
-#[derive(Debug)]
-struct MtlFile {
-    path: PathBuf,
-    content: String,
-}
+use super::mtl_parser::MtlFile;
 
 #[derive(Debug)]
 pub struct ObjFile {
     pub name: String,
+    path: PathBuf,
     content: String,
     mtl_files: Vec<MtlFile>,
 }
 
 impl ObjFile {
     pub fn new(path: &Path) -> Self {
+        println!("Loading {}...", path.display());
         Self {
             name: "Undefined".to_string(),
-            content: ObjFile::obj_file_read(path),
+            path: path.to_path_buf(),
+            content: ObjFile::obj_file_read(path).unwrap_or_default(),
             mtl_files: vec![],
         }
     }
 
-    fn obj_file_read(path: &Path) -> String {
-        read_to_string(path).unwrap_or("empty file".to_string())
+    fn obj_file_read(path: &Path) -> Result<String, io::Error> {
+        let content = read_to_string(path)?;
+        Ok(content)
     }
 
     pub fn grep_mtl_files(&mut self) {
@@ -40,12 +40,9 @@ impl ObjFile {
                 let path = PathBuf::from(words.next_back().unwrap_or("No path found"));
                 let mtl_file: MtlFile = MtlFile {
                     path: (path.clone()),
-                    content: (read_to_string(
-                        "./resources/"
-                            .to_string()
-                            .add(path.to_str().unwrap_or_default()),
-                    )
-                    .unwrap_or("empty file".to_string())),
+                    content: (read_to_string(self.path.parent().unwrap().join(path))
+                        .unwrap_or("empty file".to_string())),
+                    materials: vec![],
                 };
                 files.push(mtl_file);
             }

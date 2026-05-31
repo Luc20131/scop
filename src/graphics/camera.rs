@@ -1,6 +1,6 @@
-use crate::my_lib::math_utils::radians;
-use crate::my_lib::matrice::Matrix4;
-use crate::my_lib::vec3::Vec3;
+use crate::math::math_utils::radians;
+use crate::math::matrix::Matrix4;
+use crate::math::vec3::Vec3;
 
 pub struct Camera {
     pos: Vec3,
@@ -32,9 +32,9 @@ impl Camera {
 
     /// change Camera orientation
     pub fn rotate_cam(&mut self, angles: Vec3) {
-        let mut pitch = angles.x;
+        let pitch = angles.x;
         let yaw = angles.y;
-        let roll = angles.z;
+        // let roll = angles.z;
 
         let p = Vec3 {
             x: f32::cos(radians(yaw)) * f32::cos(radians(pitch)),
@@ -55,5 +55,5 @@ impl Camera {
         self.rotate_cam(angles);
     }
 
-    // TODO zoom and camera translation 
+    // TODO zoom and camera translation
 }

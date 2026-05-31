@@ -1,4 +1,4 @@
-use crate::my_lib::vec3::Vec3;
+use crate::math::vec3::Vec3;
 
 #[derive(Debug, Clone)]
 pub struct Matrix4<T> {
@@ -143,13 +143,13 @@ where
             for i in 0..4 {
                 res.value[i + (y * 4)] = sub_mult_proc(
                     [
-                        self.value[0 + i],
+                        self.value[i],
                         self.value[4 + i],
                         self.value[8 + i],
                         self.value[12 + i],
                     ],
                     [
-                        m.value[0 + y * 4],
+                        m.value[y * 4],
                         m.value[1 + y * 4],
                         m.value[2 + y * 4],
                         m.value[3 + y * 4],

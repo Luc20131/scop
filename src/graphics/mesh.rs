@@ -1,17 +1,18 @@
-use std::fs;
-
+#[allow(dead_code)]
 use crate::graphics::gl_wrapper::{BufferObject, Vao};
 use crate::graphics::texture::Texture;
-use crate::my_lib::vec3::Vec3;
+use crate::math::vec3::Vec3;
 
 pub type Normal = Vec3;
 
+#[allow(dead_code)]
 pub struct Vertex {
     position: Vec3,
     normals: Vec3,
     tex_coord: Vec3,
 }
 
+#[allow(dead_code)]
 pub struct Mesh {
     pub name: String,
     pub vertices: Vec<Vertex>,
@@ -22,9 +23,10 @@ pub struct Mesh {
     ebo: BufferObject,
 }
 
+#[allow(dead_code)]
 impl Mesh {
     pub fn new(
-        name: String,   
+        name: String,
         vertices: Vec<Vertex>,
         normal: Vec<Normal>,
         texture: Vec<Texture>,
@@ -44,7 +46,7 @@ impl Mesh {
         self.vao.bind();
         self.vbo.bind();
         self.vbo
-            .store_f32_data(&(self.pos_vertices_slice().as_slice()));
+            .store_f32_data(self.pos_vertices_slice().as_slice());
         self.ebo.bind();
     }
 

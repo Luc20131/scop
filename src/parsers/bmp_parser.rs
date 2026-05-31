@@ -1,10 +1,7 @@
 use std::{
     fs::read,
     path::Path,
-    process::{ExitStatus, exit},
 };
-
-use crate::graphics::texture;
 
 #[repr(C)]
 #[derive(Debug)]
@@ -50,14 +47,14 @@ fn format_data<'a>(content: &'a Vec<u8>, img_name: &'a str) -> BmpImage<'a> {
         file_size: u32::from_ne_bytes(content[2..6].try_into().unwrap()),
         reserved1: u16::from_ne_bytes(content[6..8].try_into().unwrap()),
         reserved2: u16::from_ne_bytes(content[8..10].try_into().unwrap()),
-        file_offset: file_offset,
+        file_offset,
         dib_head_size: u32::from_ne_bytes(content[14..18].try_into().unwrap()),
         img_w: u32::from_ne_bytes(content[18..22].try_into().unwrap()),
         img_h: u32::from_ne_bytes(content[22..26].try_into().unwrap()),
         plane: u16::from_ne_bytes(content[26..28].try_into().unwrap()),
         bits_per_pixel: u16::from_ne_bytes(content[28..30].try_into().unwrap()),
         compression: u32::from_ne_bytes(content[30..34].try_into().unwrap()),
-        img_size: img_size,
+        img_size,
         x_px_per_meter: u32::from_ne_bytes(content[38..42].try_into().unwrap()),
         y_px_per_meter: u32::from_ne_bytes(content[42..46].try_into().unwrap()),
         colors_in_color_table: u32::from_ne_bytes(content[46..50].try_into().unwrap()),

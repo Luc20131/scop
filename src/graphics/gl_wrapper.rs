@@ -81,7 +81,6 @@ impl BufferObject {
 pub struct VertexAttribute {
     index: GLuint,
 }
-
 impl VertexAttribute {
     pub fn new(
         index: u32,
