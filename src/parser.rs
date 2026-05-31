@@ -41,14 +41,15 @@ impl ObjFile {
                 let mtl_file: MtlFile = MtlFile {
                     path: (path.clone()),
                     content: (read_to_string(
-                        "./".to_string().add(path.to_str().unwrap_or_default()),
+                        "./resources/"
+                            .to_string()
+                            .add(path.to_str().unwrap_or_default()),
                     )
                     .unwrap_or("empty file".to_string())),
                 };
                 files.push(mtl_file);
             }
         }
-        println!("files: {:?}", files);
         self.mtl_files = files;
     }
 }

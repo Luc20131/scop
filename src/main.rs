@@ -25,9 +25,9 @@ fn main() {
     let obj_path: &Path = Path::new(&arg);
     println!("Loading {}...", obj_path.file_name().unwrap().display());
     let mut obj: parser::ObjFile = parser::ObjFile::new(&obj_path);
-    dbg!(&obj);
 
     obj.grep_mtl_files();
+    dbg!(&obj);
     // let content = fs::read_to_string(env::args().nth(1).unwrap()).unwrap();
     // let lines: Lines = content.lines();
     // for line in lines {
