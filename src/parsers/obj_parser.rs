@@ -31,22 +31,26 @@ impl ObjFile {
         Ok(content)
     }
 
-    pub fn grep_mtl_files(&mut self) {
+    pub fn get_mtl_files(&mut self) {
         let lines = self.content.lines();
         let mut files: Vec<MtlFile> = vec![];
         for line in lines {
             if line.contains("mtllib ") {
                 let mut words: SplitWhitespace<'_> = line.split_whitespace();
                 let path = PathBuf::from(words.next_back().unwrap_or("No path found"));
-                let mtl_file: MtlFile = MtlFile {
+                println!("Loading {}...", path.display());
+                let mut mtl_file: MtlFile = MtlFile {
                     path: (path.clone()),
                     content: (read_to_string(self.path.parent().unwrap().join(path))
                         .unwrap_or("empty file".to_string())),
                     materials: vec![],
                 };
+                mtl_file.parse();
+                println!("Nb materials : {}", mtl_file.materials.iter().count());
                 files.push(mtl_file);
             }
         }
         self.mtl_files = files;
+        todo!("regroup get mtl files and new function to get all data just with new(PATH)");
     }
 }
