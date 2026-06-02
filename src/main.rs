@@ -2,6 +2,7 @@ use gl::types::*;
 use scop::graphics::camera::Camera;
 use scop::graphics::gl_wrapper::*;
 use scop::graphics::shaders::Shader;
+use scop::graphics::texture::Texture;
 use scop::graphics::window::Window;
 use scop::math::matrix::Matrix4;
 use scop::math::vec3::Vec3;
@@ -21,16 +22,8 @@ fn main() -> Result<(), String> {
     }
     let arg = env::args().nth(1).unwrap_or_default();
     let obj_path: &Path = Path::new(&arg);
-    let mut obj: ObjFile = ObjFile::new(&obj_path);
-
-    obj.get_mtl_files();
-    // dbg!(&obj);
-    // let content = fs::read_to_string(env::args().nth(1).unwrap()).unwrap();
-    // let lines: Lines = content.lines();
-    // for line in lines {
-    //     obj.read_data(line);
-    // }
-    // image_loader("./resources/oui.bmp");
+    let obj: ObjFile = ObjFile::new(&obj_path);
+    dbg!(obj);
 
     // let vertices: &[GLfloat] = obj.v.as_slice();
     // let indices: &[u32] = obj.indices.as_slice();

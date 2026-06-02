@@ -1,16 +1,16 @@
 use std::{path::PathBuf, str::SplitWhitespace};
 
-pub const IlluMode_ColorOnAndAmbientOff: u8 = 0;
-pub const IlluMode_ColorOnAndAmbientOn: u8 = 1;
-pub const IlluMode_HighlightOn: u8 = 2;
-pub const IlluMode_ReflectRaytraceOn: u8 = 3;
-pub const IlluMode_GlassReflectRaytraceOn: u8 = 4;
-pub const IlluMode_ReflectFresnelRaytraceOn: u8 = 5;
-pub const IlluMode_RefractRayTraceOnFresnelOff: u8 = 6;
-pub const IlluMode_RefractFresnelRayTraceOn: u8 = 7;
-pub const IlluMode_ReflectOnRayTraceOff: u8 = 8;
-pub const IlluMode_TranspGlassOnRayTraceOff: u8 = 9;
-pub const IlluMode_CastsShadowsInviSurfaces: u8 = 10;
+pub const ILLU_MODE_COLOR_ON_AND_AMBIENT_OFF: u8 = 0;
+pub const ILLU_MODE_COLOR_ON_AND_AMBIENT_ON: u8 = 1;
+pub const ILLU_MODE_HIGHLIGHT_ON: u8 = 2;
+pub const ILLU_MODE_REFLECT_RAYTRACE_ON: u8 = 3;
+pub const ILLU_MODE_GLASS_REFLECT_RAYTRACE_ON: u8 = 4;
+pub const ILLU_MODE_REFLECT_FRESNEL_RAYTRACE_ON: u8 = 5;
+pub const ILLU_MODE_REFRACT_RAY_TRACE_ON_FRESNEL_OFF: u8 = 6;
+pub const ILLU_MODE_REFRACT_FRESNEL_RAY_TRACE_ON: u8 = 7;
+pub const ILLU_MODE_REFLECT_ON_RAY_TRACE_OFF: u8 = 8;
+pub const ILLU_MODE_TRANSP_GLASS_ON_RAY_TRACE_OFF: u8 = 9;
+pub const ILLU_MODE_CASTS_SHADOWS_INVI_SURFACES: u8 = 10;
 
 #[derive(Debug)]
 pub struct MtlFile {

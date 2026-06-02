@@ -5,6 +5,8 @@ use std::{
     str::SplitWhitespace,
 };
 
+use crate::graphics::model::Model;
+
 use super::mtl_parser::MtlFile;
 
 #[derive(Debug)]
@@ -18,11 +20,18 @@ pub struct ObjFile {
 impl ObjFile {
     pub fn new(path: &Path) -> Self {
         println!("Loading {}...", path.display());
-        Self {
+        let mut oui = ObjFile {
             name: "Undefined".to_string(),
             path: path.to_path_buf(),
             content: ObjFile::obj_file_read(path).unwrap_or_default(),
             mtl_files: vec![],
+        };
+        oui.get_mtl_files();
+        Self {
+            name: oui.name,
+            path: oui.path,
+            content: oui.content,
+            mtl_files: oui.mtl_files,
         }
     }
 
@@ -51,6 +60,14 @@ impl ObjFile {
             }
         }
         self.mtl_files = files;
-        todo!("regroup get mtl files and new function to get all data just with new(PATH)");
+    }
+
+    pub fn model() -> Model {
+        let mut model = Model {
+            meshes: vec![],
+            textures: vec![],
+        };
+
+        model
     }
 }

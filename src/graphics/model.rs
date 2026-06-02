@@ -1,6 +1,7 @@
-use crate::graphics::mesh::Mesh;
+use crate::graphics::{mesh::Mesh, texture::Texture};
 
 #[allow(dead_code)]
-struct Model {
-    meshes: Vec<Mesh>,
+pub struct Model {
+    pub meshes: Vec<Mesh>,
+    pub textures: Vec<Texture>,
 }
