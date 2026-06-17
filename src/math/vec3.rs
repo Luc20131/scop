@@ -17,6 +17,15 @@ impl Clone for Vec3 {
     }
 }
 
+impl PartialEq for Vec3 {
+    fn eq(&self, other: &Self) -> bool {
+        if self.x.eq(&other.x) && self.y.eq(&other.y) && self.z.eq(&other.z) {
+            return true;
+        }
+        false
+    }
+}
+
 impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }

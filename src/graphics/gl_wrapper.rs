@@ -2,7 +2,7 @@ use gl::types::*;
 use std::mem;
 use std::os::raw::*;
 
-#[macro_export]
+// #[macro_export]
 // macro_rules! set_attribute {
 //     ($vbo:ident, $pos:tt, $t:ident :: $field:tt) => {{
 //         let dummy = core::mem::MaybeUninit::<$t>::uninit();
