@@ -1,19 +1,26 @@
 use crate::parsers::bmp_parser::image_loader;
 use std::{ffi::OsString, path::Path};
 
-#[allow(dead_code)]
+#[derive(Debug)]
+#[allow(unused)]
+
 pub struct Texture {
-    id: u32,
-    name: OsString,
+    pub id: u32,
+    pub name: OsString,
+    pub data: Vec<u8>,
+    pub width: i32,
+    pub height: i32,
 }
 
 impl Texture {
     pub fn new(path: &Path) -> Self {
-        image_loader(path);
-
+        let bmp = image_loader(path);
         Self {
             id: 0,
             name: path.file_name().unwrap_or_default().to_os_string(),
+            data: bmp.img_pixels,
+            width: bmp.img_width,
+            height: bmp.img_height,
         }
     }
 }

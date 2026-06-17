@@ -1,15 +1,15 @@
 use std::{
     fs::read_to_string,
-    io,
+    io::{self},
     path::{Path, PathBuf},
-    str::SplitWhitespace,
 };
 
-use crate::graphics::model::Model;
+use crate::graphics::{mesh::Mesh, model::Model};
 
 use super::mtl_parser::MtlFile;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+
 pub struct ObjFile {
     pub name: String,
     path: PathBuf,
@@ -18,56 +18,142 @@ pub struct ObjFile {
 }
 
 impl ObjFile {
-    pub fn new(path: &Path) -> Self {
+    pub fn new(path: &Path) -> Option<Self> {
         println!("Loading {}...", path.display());
-        let mut oui = ObjFile {
-            name: "Undefined".to_string(),
+        let content = match read_file(&path.to_path_buf()) {
+            Ok(content) => content,
+            Err(err) => {
+                eprintln!("{}", err);
+                return None;
+            }
+        };
+        let mut obj = ObjFile {
+            name: path
+                .file_name()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap_or("Undefined")
+                .to_string(),
             path: path.to_path_buf(),
-            content: ObjFile::obj_file_read(path).unwrap_or_default(),
+            content: content,
             mtl_files: vec![],
         };
-        oui.get_mtl_files();
-        Self {
-            name: oui.name,
-            path: oui.path,
-            content: oui.content,
-            mtl_files: oui.mtl_files,
-        }
+        obj.get_mtl_files();
+        Some(Self {
+            name: obj.name,
+            path: obj.path,
+            content: obj.content,
+            mtl_files: obj.mtl_files,
+        })
     }
 
-    fn obj_file_read(path: &Path) -> Result<String, io::Error> {
-        let content = read_to_string(path)?;
-        Ok(content)
-    }
-
+    ///Searches for mtl files within .obj file, parse them and adds them to the mtl_files attribute
+    ///# Error:
+    /// Print the error on stderr and resumes .obj parsing
     pub fn get_mtl_files(&mut self) {
-        let lines = self.content.lines();
+        println!("Mtl file verification...");
+        let content_lines = self.content.lines();
         let mut files: Vec<MtlFile> = vec![];
-        for line in lines {
-            if line.contains("mtllib ") {
-                let mut words: SplitWhitespace<'_> = line.split_whitespace();
-                let path = PathBuf::from(words.next_back().unwrap_or("No path found"));
-                println!("Loading {}...", path.display());
+        for line in content_lines {
+            let Some((start, file_name)) = line.split_once("mtllib ") else {
+                continue;
+            };
+            if !start.trim().is_empty() {
+                eprintln!("Error: the mtllib line is in the wrong format ");
+                return;
+            }
+            let name = file_name.trim();
+            if !name.ends_with(".mtl") || name.is_empty() {
+                eprintln!("Error: the MTL file name in the OBJ file is invalid or does not exist");
+                return;
+            }
+            let mut path = PathBuf::from(name);
+            path = self
+                .path
+                .parent()
+                .expect("Incorrect obj file parent path")
+                .join(&path);
+            if !path.is_file() {
+                eprintln!("Error: {} not found", path.display());
+                return;
+            }
+            println!("Loading {}...", path.display());
+            if let Ok(content) = read_file(&path) {
                 let mut mtl_file: MtlFile = MtlFile {
-                    path: (path.clone()),
-                    content: (read_to_string(self.path.parent().unwrap().join(path))
-                        .unwrap_or("empty file".to_string())),
+                    path: (path),
+                    content: content,
                     materials: vec![],
                 };
-                mtl_file.parse();
-                println!("Nb materials : {}", mtl_file.materials.iter().count());
-                files.push(mtl_file);
+                if !mtl_file.content.is_empty() {
+                    mtl_file.parse();
+                    println!(
+                        "Number of materials : {}",
+                        mtl_file.materials.iter().count()
+                    );
+                    files.push(mtl_file);
+                }
+                continue;
             }
+            println!("Failed to read {}", path.display());
         }
-        self.mtl_files = files;
+        if files.len() > 0 {
+            self.mtl_files = files;
+        } else {
+            println!(
+                "{} doesn't have mtl file, resume obj parsing...",
+                self.path.file_name().unwrap_or_default().display()
+            );
+        }
     }
 
-    pub fn model() -> Model {
+    pub fn modelise(&mut self) -> Model {
+        println!("Modelise {}", self.name);
         let mut model = Model {
             meshes: vec![],
             textures: vec![],
+            mtl_file: vec![],
         };
-
+        model.mtl_file = self.mtl_files.clone();
+        model.meshes = self.parse_mesh();
         model
     }
+
+    fn parse_mesh(&self) -> Vec<Mesh> {
+        let model_content = self.content.split_terminator("o ");
+        let mut meshes: Vec<Mesh> = vec![];
+        for elem in model_content {
+            let mut mesh = Mesh::default();
+            let mut lines = elem.lines();
+            let first_line = lines.next().unwrap_or_default();
+            if first_line.starts_with("#") || first_line.starts_with("mtllib ") {
+                continue;
+            }
+
+            mesh.name = first_line.to_string();
+            // dbg!(&mesh.name);
+            for mut line in lines {
+                line = line.trim();
+                mesh.parse_line(line);
+            }
+
+            meshes.push(mesh);
+        }
+        // println!("New Elem {}", meshes.len());
+        meshes
+    }
 }
+
+pub fn read_file(path: &PathBuf) -> Result<String, io::Error> {
+    let content = read_to_string(path)?;
+    Ok(content)
+}
+
+//let lines = elem.lines();
+// for line in lines {
+//     let mut words = line.split_whitespace();
+//     match words.next() {
+//         Some("o") => self.name = words.next().unwrap_or("Undefined").to_string(),
+//         Some(_) => {}
+//         None => {}
+//     }
+//}

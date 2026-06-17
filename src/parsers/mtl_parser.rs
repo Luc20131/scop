@@ -12,14 +12,14 @@ pub const ILLU_MODE_REFLECT_ON_RAY_TRACE_OFF: u8 = 8;
 pub const ILLU_MODE_TRANSP_GLASS_ON_RAY_TRACE_OFF: u8 = 9;
 pub const ILLU_MODE_CASTS_SHADOWS_INVI_SURFACES: u8 = 10;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MtlFile {
     pub path: PathBuf,
     pub content: String,
     pub materials: Vec<Material>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct RGB {
     red: f32,
     green: f32,
@@ -56,7 +56,9 @@ impl RGB {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+#[allow(unused)]
+
 pub struct Material {
     pub name: String,
     ka: RGB,
@@ -154,11 +156,11 @@ impl MtlFile {
                         mtl.tf.set_value_from_words(words);
                     }
                     "illum" => {
-                        mtl.illum = (words
+                        mtl.illum = words
                             .next()
                             .unwrap_or_default()
                             .parse::<usize>()
-                            .unwrap_or(0))
+                            .unwrap_or(0)
                     }
                     _ => {}
                 }
