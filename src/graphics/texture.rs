@@ -1,7 +1,7 @@
 use crate::parsers::bmp_parser::image_loader;
 use std::{ffi::OsString, path::Path};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(unused)]
 
 pub struct Texture {
