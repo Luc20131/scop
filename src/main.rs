@@ -98,7 +98,7 @@ fn main() -> Result<(), String> {
         let mut yaw: f32 = 0.0;
         let mut pitch: f32 = 0.0;
         let mut roll: f32 = 0.0;
-        let scaling: f32 = 1.0;
+        let scaling: f32 = 0.8;
         // let mid_offset = obj.model.meshes[0].vertices
         let mut render_type = gl::FILL;
         let mut camera: Camera = Camera::new();
@@ -111,7 +111,7 @@ fn main() -> Result<(), String> {
         let proj: Matrix4<f32> = Matrix4::<f32>::perspective(PI / 2.0, 800.0 / 600.0, 0.1, 100.0);
         // let texture: Vec<Texture> = vec![Texture::new(Path::new("./resources/test.bmp"))];
         // let texture: String = String::from("1111111111111111");
-        let image = image::open("./resources/non.bmp")
+        let image = image::open("./resources/dirt.bmp")
             .expect("carsh")
             .into_rgba8();
         // dbg!(&texture[0].data);
