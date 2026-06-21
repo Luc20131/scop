@@ -1,4 +1,5 @@
 use gl::types::*;
+use image::EncodableLayout;
 use scop::graphics::camera::Camera;
 use scop::graphics::gl_wrapper::*;
 use scop::graphics::shaders::Shader;
@@ -22,7 +23,6 @@ fn main() -> Result<(), String> {
     }
     let arg = env::args().nth(1).unwrap_or_default();
     let obj_path: &Path = Path::new(&arg);
-    // let mut obj: ObjFile;
     if let Some(obj) = ObjFile::new(&obj_path) {
         println!(
             "Obj vertex : {}\nMtl files nb: {}",
@@ -38,35 +38,11 @@ fn main() -> Result<(), String> {
                 msh.indice.len()
             );
         }
-        // dbg!(&model.meshes);
         let vertices: &[GLfloat] = &model.meshes[0].vertices.as_slice();
-
-        let indices: &[u32] = model.meshes[0].indice.as_slice();
+        let indices: &[u32] = &model.meshes[0].indice.as_slice();
         let mut window = Window::new(1920, 1080, &obj.name);
         //INIT OpenGL
         window.init_gl();
-
-        // let tex: Vec<Texture> = vec![Texture::new(Path::new("./resources/oui.bmp"))];
-        // let mut text: GLuint = 0;
-        // unsafe {
-        //     gl::GenTextures(1, &mut text);
-        //     gl::BindTexture(gl::TEXTURE_2D, text);
-        //     gl::TexImage2D(
-        //         gl::TEXTURE_2D,
-        //         0,
-        //         gl::BGRA as i32,
-        //         tex[0].width,
-        //         tex[0].height,
-        //         0,
-        //         gl::RGBA,
-        //         gl::UNSIGNED_BYTE,
-        //         tex[0].data.as_slice().as_ptr() as *const _,
-        //     );
-        // }
-        // let v_oui: Vec<Vertex> = vec![Vertex::new()];
-        // let n_oui: Vec<Normal>;
-
-        // let mesh: Mesh = Mesh::new(v_oui, n_oui, tex);
 
         let mut shaders = Shader::new(
             "./src/graphics/shaders_files/vertex.vert",
@@ -89,67 +65,92 @@ fn main() -> Result<(), String> {
             3,
             gl::FLOAT,
             gl::FALSE,
-            6 * mem::size_of::<GLfloat>() as GLsizei,
+            8 * mem::size_of::<GLfloat>() as GLsizei,
             ptr::null(),
         );
 
         position_attribute.enable();
 
-        // let tex_attribute = VertexAttribute::new(
-        //     1,
-        //     2,
-        //     gl::FLOAT,
-        //     gl::FALSE,
-        //     8 * mem::size_of::<GLfloat>() as GLsizei,
-        //     ptr::null(),
-        // );
-        // tex_attribute.enable();
-        // unsafe {
-        //     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        //     gl::Enable(gl::BLEND);
-        // }
-        // let normal_attribute = VertexAttribute::new(
-        //     2,
-        //     3,
-        //     gl::FLOAT,
-        //     gl::FALSE,
-        //     8 * mem::size_of::<GLfloat>() as GLsizei,
-        //     ptr::null(),
-        // );
-        // normal_attribute.enable();
-        // let color_attribute = VertexAttribute::new(
-        //     1,
-        //     3,
-        //     gl::FLOAT,
-        //     gl::FALSE,
-        //     6 * mem::size_of::<GLfloat>() as GLsizei,
-        //     (3 * mem::size_of::<GLfloat>()) as *const _,
-        // );
-        // color_attribute.enable();
-        // dbg!((indices.len()));
+        let tex_attribute = VertexAttribute::new(
+            1,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            8 * mem::size_of::<GLfloat>() as GLsizei,
+            (3 * mem::size_of::<GLfloat>()) as *const _,
+        );
+        tex_attribute.enable();
+        unsafe {
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            gl::Enable(gl::BLEND);
+        }
+        let normal_attribute = VertexAttribute::new(
+            2,
+            3,
+            gl::FLOAT,
+            gl::FALSE,
+            8 * mem::size_of::<GLfloat>() as GLsizei,
+            (5 * mem::size_of::<GLfloat>()) as *const _,
+        );
+        normal_attribute.enable();
 
         let mut time = window.get_time();
         let mut yaw: f32 = 0.0;
         let mut pitch: f32 = 0.0;
         let mut roll: f32 = 0.0;
-        let scaling: f32 = 0.5;
-        let mut render_type = gl::LINE;
+        let scaling: f32 = 1.0;
+        // let mid_offset = obj.model.meshes[0].vertices
+        let mut render_type = gl::FILL;
         let mut camera: Camera = Camera::new();
         camera.set_pos(Vec3 {
             x: 0.0,
             y: 0.0,
             z: 100.0,
         });
+
         let proj: Matrix4<f32> = Matrix4::<f32>::perspective(PI / 2.0, 800.0 / 600.0, 0.1, 100.0);
+        // let texture: Vec<Texture> = vec![Texture::new(Path::new("./resources/test.bmp"))];
+        // let texture: String = String::from("1111111111111111");
+        let image = image::open("./resources/non.bmp")
+            .expect("carsh")
+            .into_rgba8();
+        // dbg!(&texture[0].data);
+        let mut tex_id: GLuint = 0;
         unsafe {
+            gl::GenTextures(1, &mut tex_id);
+            gl::BindTexture(gl::TEXTURE_2D, tex_id);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGBA as i32,
+                image.width() as i32,
+                image.height() as i32,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                image.as_bytes().as_ptr() as *const _,
+            );
+            gl::GenerateMipmap(gl::TEXTURE_2D);
+        }
+        shaders.use_prog();
+
+        unsafe {
+            let tmp = &CString::new("ourTexture").unwrap();
+            gl::Uniform1i(gl::GetUniformLocation(shaders.id, tmp.as_ptr()), 0);
             gl::Enable(gl::DEPTH_TEST);
+            // gl::DepthFunc(gl::LESS);
         }
         while !window.should_close() {
             unsafe {
                 gl::ClearColor(0.0, 0.0, 0.0, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-                // gl::BindTexture(gl::TEXTURE_2D, text);
-                // vao.bind();
+                gl::ActiveTexture(gl::TEXTURE0);
+                gl::BindTexture(gl::TEXTURE_2D, tex_id);
+                vao.bind();
                 gl::PolygonMode(gl::FRONT_AND_BACK, render_type);
                 camera.move_cam(
                     Vec3 {
@@ -166,7 +167,7 @@ fn main() -> Result<(), String> {
                 shaders.set_matrix4(&CString::new("projection").unwrap(), proj.clone());
                 shaders.set_matrix4(&CString::new("view").unwrap(), camera.view.clone());
                 let mut transform: Matrix4<f32> = Matrix4::identity();
-                // transform.translate(0.0, 0.0, 0.0);
+                transform.translate(0.0, 0.0, 0.0);
                 transform = transform.scale(scaling);
                 transform.rotate(0.0, window.get_time() as f32, 0.0);
                 shaders.set_matrix4(&CString::new("transform").unwrap(), transform);

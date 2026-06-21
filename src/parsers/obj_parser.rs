@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     fs::read_to_string,
     io::{self},
     path::{Path, PathBuf},
@@ -165,9 +165,9 @@ impl ObjFile {
                 }
                 let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
                 if let Some(face) = data_to_face(data) {
-                    for elem in &face {
-                        msh.indice.push(elem.vertex);
-                    }
+                    // for elem in &face {
+                    //     msh.indice.push(elem.vertex);
+                    // }
                     msh.faces.push(face);
                 }
             }
@@ -177,72 +177,61 @@ impl ObjFile {
         }
     }
 
-    //     pub fn mesh_to_slice(&self) -> Vec<f32> {
-    //         let mut sliced: Vec<f32> = vec![];
-    // for face in &self.face {
-    //     for face_elem in &face.element {
-    //         dbg!(face_elem);
-    //         sliced.push(face_elem.position.x);
-    //         sliced.push(face_elem.position.y);
-    //         sliced.push(face_elem.position.z);
-    //         // sliced.push(face_elem.tex_coord.0);
-    //         // sliced.push(face_elem.tex_coord.1);
-    //         // sliced.push(face_elem.normals.x);
-    //         // sliced.push(face_elem.normals.y);
-    //         // sliced.push(face_elem.normals.z);
-    //     }
-    // }
-    //         for v in &self.vertices {
-    //             sliced.push(v.x);
-    //             sliced.push(v.y);
-    //             sliced.push(v.z);
-    //             sliced.push((v.x));
-    //             sliced.push((v.y));
-    //             sliced.push((v.z));
-    //         }
-    //         sliced
-    //     }
-    // }
-
     fn modelise(&mut self) {
         for mesh in &mut self.model.meshes {
-            let mut indice_map: HashMap<u32, usize> = HashMap::<u32, usize>::new();
+            let mut indice_map: HashMap<u32, u32> = HashMap::<u32, u32>::new();
+            let mut index: u32 = 0;
             for face in &mesh.faces {
                 for face_elem in face {
                     if !indice_map.contains_key(&face_elem.vertex) {
-                        indice_map
-                            .entry(face_elem.vertex)
-                            .insert_entry(indice_map.len());
+                        index += 1;
+                        indice_map.entry(face_elem.vertex).insert_entry(index);
 
                         let v_indice = face_elem.vertex - 1;
                         mesh.vertices.push(self.vertex[v_indice as usize].x);
                         mesh.vertices.push(self.vertex[v_indice as usize].y);
                         mesh.vertices.push(self.vertex[v_indice as usize].z);
-                    } else {
-                        println!("duplicata : {}", face_elem.vertex);
+                        if self.tex_coord.len() > face_elem.tex_coord.unwrap_or_default() as usize {
+                            mesh.vertices.push(
+                                self.tex_coord[face_elem.tex_coord.unwrap_or_default() as usize].0,
+                            );
+                            mesh.vertices.push(
+                                self.tex_coord[face_elem.tex_coord.unwrap_or_default() as usize].1,
+                            );
+                        } else {
+                            mesh.vertices.push(0.0);
+                            mesh.vertices.push(0.0);
+                        }
+                        if self.normals.len() > face_elem.normals.unwrap_or_default() as usize {
+                            mesh.vertices.push(
+                                self.normals[face_elem.normals.unwrap_or_default() as usize].x,
+                            );
+                            mesh.vertices.push(
+                                self.normals[face_elem.normals.unwrap_or_default() as usize].y,
+                            );
+                            mesh.vertices.push(
+                                self.normals[face_elem.normals.unwrap_or_default() as usize].z,
+                            );
+                        } else {
+                            mesh.vertices.push(0.0);
+                            mesh.vertices.push(0.0);
+                            mesh.vertices.push(0.0);
+                        }
                     }
-
-                    // if !indice_set.insert(face_elem.vertex) {
-                    //     if let Some(mut tex_coord_indice) = face_elem.tex_coord {
-                    //         tex_coord_indice -= 1;
-                    //         mesh.vertices
-                    //             .push(self.tex_coord[tex_coord_indice as usize].0);
-                    //         mesh.vertices
-                    //             .push(self.tex_coord[tex_coord_indice as usize].1);
-                    //     }
-                    // }
-                    // if !indice_set.insert(face_elem.vertex) {
-                    //     if let Some(mut normal_indice) = face_elem.normals {
-                    //         normal_indice -= 1;
-                    //         mesh.vertices.push(self.normals[normal_indice as usize].x);
-                    //         mesh.vertices.push(self.normals[normal_indice as usize].y);
-                    //         mesh.vertices.push(self.normals[normal_indice as usize].z);
-                    //     }
-                    // }
+                    mesh.indice
+                        .push(*indice_map.entry(face_elem.vertex).or_default() - 1);
                 }
             }
-            dbg!(indice_map);
         }
+    }
+
+    pub fn get_middle_offset(&self) -> Vec3 {
+        let offset: Vec3 = Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        offset
     }
 }
 

@@ -3,7 +3,6 @@ use std::{ffi::OsString, path::Path};
 
 #[derive(Debug, Clone)]
 #[allow(unused)]
-
 pub struct Texture {
     pub id: u32,
     pub name: OsString,
@@ -24,3 +23,11 @@ impl Texture {
         }
     }
 }
+
+// fn to_gl_color(colors: Vec<u8>) -> Vec<f32> {
+//     let mut gl_colors: Vec<f32> = vec![];
+//     for color in colors {
+//         gl_colors.push(color as f32 * (1.0 / 255.0));
+//     }
+//     gl_colors
+// }
