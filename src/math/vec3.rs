@@ -1,5 +1,6 @@
 use std::ops::{Add, Sub};
 
+#[derive(Debug)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
@@ -16,9 +17,18 @@ impl Clone for Vec3 {
     }
 }
 
+impl PartialEq for Vec3 {
+    fn eq(&self, other: &Self) -> bool {
+        if self.x.eq(&other.x) && self.y.eq(&other.y) && self.z.eq(&other.z) {
+            return true;
+        }
+        false
+    }
+}
+
 impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
-        Self { x: x, y: y, z: z }
+        Self { x, y, z }
     }
 
     /// return the Vec3 argmument normalized without change it
@@ -34,9 +44,9 @@ impl Vec3 {
     /// Normalize the concerned Vec3
     pub fn normalize(&mut self) {
         let v_norm = f32::sqrt(self.x * self.x + self.y * self.y + self.z * self.z);
-            self.x = self.x / v_norm;
-            self.y = self.y / v_norm;
-            self.z = self.z / v_norm;
+        self.x /= v_norm;
+        self.y /= v_norm;
+        self.z /= v_norm;
     }
 
     pub fn cross(v1: Vec3, v2: Vec3) -> Vec3 {
