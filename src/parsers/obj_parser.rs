@@ -152,7 +152,6 @@ impl ObjFile {
                 self.model.meshes.push(Mesh::default());
                 println!("obj name: {}", data);
                 self.model.meshes.last_mut().unwrap().name = data.to_string();
-                // dbg!(&self.model.meshes);
             }
             "g " => {
                 self.model.meshes.push(Mesh::default());
@@ -165,19 +164,18 @@ impl ObjFile {
                 }
                 let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
                 if let Some(face) = data_to_face(data) {
-                    // for elem in &face {
-                    //     msh.indice.push(elem.vertex);
-                    // }
                     msh.faces.push(face);
                 }
             }
             "s" => {}
             "usemtl" => {}
+            "l" => {}
             _ => {}
         }
     }
 
     fn modelise(&mut self) {
+        println!("nb_mesh : {}", self.model.meshes.len());
         for mesh in &mut self.model.meshes {
             let mut indice_map: HashMap<u32, u32> = HashMap::<u32, u32>::new();
             let mut index: u32 = 0;
@@ -218,10 +216,12 @@ impl ObjFile {
                             mesh.vertices.push(0.0);
                         }
                     }
-                    mesh.indice
+                    mesh.indices
                         .push(*indice_map.entry(face_elem.vertex).or_default() - 1);
                 }
             }
+            // dbg!(&mesh.vertices);
+            mesh.setup_mesh();
         }
     }
 
