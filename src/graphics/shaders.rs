@@ -1,4 +1,4 @@
-use crate::my_lib::matrice::Matrix4;
+use crate::math::matrix::Matrix4;
 use gl::{self};
 use std::ffi::CString;
 use std::fs;

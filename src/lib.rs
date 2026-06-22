@@ -1,2 +1,3 @@
 pub mod graphics;
-pub mod my_lib;
+pub mod math;
+pub mod parsers;
