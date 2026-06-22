@@ -7,6 +7,9 @@ pub struct Camera {
     front: Vec3,
     up: Vec3,
     pub view: Matrix4<f32>,
+    pub pitch: f32,
+    pub roll: f32,
+    pub yaw: f32,
 }
 
 impl Camera {
@@ -21,6 +24,9 @@ impl Camera {
                 Vec3::new(0.0, 0.0, -1.0),
                 Vec3::new(0.0, 1.0, 0.0),
             ),
+            roll: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
         }
     }
 
@@ -32,14 +38,29 @@ impl Camera {
 
     /// change Camera orientation
     pub fn rotate_cam(&mut self, angles: Vec3) {
-        let pitch = angles.x;
-        let yaw = angles.y;
+        self.pitch = angles.x;
+        self.yaw = angles.y;
         // let roll = angles.z;
 
         let p = Vec3 {
-            x: f32::cos(radians(yaw)) * f32::cos(radians(pitch)),
-            y: f32::sin(radians(pitch)),
-            z: f32::sin(radians(yaw)) * f32::cos(radians(pitch)),
+            x: f32::cos(radians(self.yaw)) * f32::cos(radians(self.pitch)),
+            y: f32::sin(radians(self.pitch)),
+            z: f32::sin(radians(self.yaw)) * f32::cos(radians(self.pitch)),
+        };
+        self.front = Vec3::normalized(p);
+
+        self.view = Matrix4::<f32>::look_at(
+            self.pos.clone(),
+            self.pos.clone() + self.front.clone(),
+            self.up.clone(),
+        );
+    }
+
+    pub fn update_camera_pos(&mut self) {
+        let p = Vec3 {
+            x: f32::cos(radians(self.yaw)) * f32::cos(radians(self.pitch)),
+            y: f32::sin(radians(self.pitch)),
+            z: f32::sin(radians(self.yaw)) * f32::cos(radians(self.pitch)),
         };
         self.front = Vec3::normalized(p);
 
