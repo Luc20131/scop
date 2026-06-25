@@ -50,10 +50,10 @@ fn main() -> Result<(), String> {
         camera.set_pos(Vec3 {
             x: 0.0,
             y: 0.0,
-            z: 10.0,
+            z: 30.0,
         });
 
-        let proj: Matrix4<f32> = Matrix4::<f32>::perspective(PI / 2.0, 800.0 / 600.0, 0.1, 100.0);
+        let proj: Matrix4<f32> = Matrix4::<f32>::perspective(PI / 2.0, 800.0 / 600.0, 0.1, 500.0);
         let mut tex = Texture::new(Path::new("./resources/oui.bmp"));
         tex.setup_tex();
         unsafe {

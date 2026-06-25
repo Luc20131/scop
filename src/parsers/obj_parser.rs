@@ -3,6 +3,7 @@ use std::{
     fs::read_to_string,
     io::{self},
     path::{Path, PathBuf},
+    str::SplitWhitespace,
     vec,
 };
 
@@ -165,12 +166,32 @@ impl ObjFile {
                 let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
                 if let Some(face) = data_to_face(data) {
                     msh.faces.push(face);
+                } else if let Some(faces) = triangulate_face(data) {
+                    for face in faces {
+                        msh.faces.push(face);
+                    }
                 }
             }
             "s" => {}
             "usemtl" => {}
             "l" => {}
             _ => {}
+        }
+
+        fn triangulate_face(data: &str) -> Option<Vec<Face>> {
+            let mut faces: Vec<Face> = vec![];
+            let mut splited_data = data.split_whitespace();
+            let origin: String = String::from(splited_data.next().unwrap_or_default());
+            let mut buffer = splited_data.next().unwrap_or_default();
+            let mut face_buffer: String;
+            for elem in splited_data {
+                face_buffer = origin.clone() + " " + buffer + " " + elem;
+                buffer = elem;
+                if let Some(face) = data_to_face(face_buffer.as_str()) {
+                    faces.push(face);
+                }
+            }
+            Some(faces)
         }
     }
 
@@ -289,6 +310,8 @@ fn data_to_face(data: &str) -> Option<Face> {
     let splited_data = data.split_whitespace();
     if splited_data.clone().count() < 3 {
         eprintln!("face format invalid : {}", data);
+        return None;
+    } else if splited_data.clone().count() > 3 {
         return None;
     }
     let mut face: Face = vec![];
