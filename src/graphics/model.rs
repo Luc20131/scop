@@ -1,5 +1,5 @@
 use crate::{
-    graphics::{mesh::Mesh, texture::Texture},
+    graphics::{mesh::Mesh, shaders::Shader, texture::Texture},
     parsers::mtl_parser::MtlFile,
 };
 
@@ -24,9 +24,9 @@ impl Default for Model {
 }
 
 impl Model {
-    pub fn draw(&self) {
+    pub fn draw(&self, shader: &mut Shader) {
         for mesh in &self.meshes {
-            mesh.draw(self.render_type);
+            mesh.draw(self.render_type, shader);
         }
     }
 }

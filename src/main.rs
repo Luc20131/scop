@@ -1,4 +1,6 @@
 use scop::graphics::camera::Camera;
+use scop::graphics::light::Light;
+use scop::graphics::mesh::toggle_texture_mode;
 use scop::graphics::shaders::Shader;
 use scop::graphics::texture::Texture;
 use scop::graphics::window::Window;
@@ -24,6 +26,11 @@ fn main() -> Result<(), String> {
 
     let obj_path: &Path = Path::new(&arg);
     if let Some(obj) = ObjFile::new(&obj_path) {
+        let mut light_shader = Shader::new(
+            "./src/graphics/shaders_files/light.vert",
+            "./src/graphics/shaders_files/fragment.frag",
+        );
+        // let light = Light::new(light_shader.clone());
         println!(
             "Obj vertex : {}\nMtl files nb: {}",
             obj.vertex.len(),
@@ -32,10 +39,11 @@ fn main() -> Result<(), String> {
         let mut model = obj.model;
         for msh in &model.meshes {
             println!(
-                "Mesh: {}\n\tnb vertice: {}\n\tnb indices: {}",
+                "Mesh: {}\n\tnb vertice: {}\n\tnb indices: {}\n\tmaterial: {}",
                 msh.name,
                 msh.vertices.len(),
-                msh.indices.len()
+                msh.indices.len(),
+                msh.material.name
             );
         }
 
@@ -45,25 +53,20 @@ fn main() -> Result<(), String> {
         );
 
         let mut time = window.get_time();
-        let scaling: f32 = 0.8;
+        let scaling: f32 = 1.0;
         let mut camera: Camera = Camera::new();
         camera.set_pos(Vec3 {
             x: 0.0,
             y: 0.0,
-            z: 30.0,
+            z: 10.0,
         });
 
         let proj: Matrix4<f32> = Matrix4::<f32>::perspective(PI / 2.0, 800.0 / 600.0, 0.1, 500.0);
-        let mut tex = Texture::new(Path::new("./resources/oui.bmp"));
+        let mut tex = Texture::new(Path::new("./resources/dirt.bmp"));
         tex.setup_tex();
-        unsafe {
-            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-            gl::Enable(gl::BLEND);
-        }
+
         shaders.use_prog();
         unsafe {
-            let tmp = &CString::new("ourTexture").unwrap();
-            gl::Uniform1i(gl::GetUniformLocation(shaders.id, tmp.as_ptr()), 0);
             gl::Enable(gl::DEPTH_TEST);
             gl::DepthFunc(gl::LESS);
         }
@@ -73,15 +76,15 @@ fn main() -> Result<(), String> {
                 camera.update_camera_pos();
                 gl::ClearColor(0.0, 0.0, 0.0, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-                gl::ActiveTexture(gl::TEXTURE0);
-                gl::BindTexture(gl::TEXTURE_2D, tex.id);
                 shaders.use_prog();
 
                 let mut transform: Matrix4<f32> = Matrix4::identity();
                 transform.translate(0.0, 0.0, 0.0);
                 transform = transform.scale(scaling);
                 // transform.rotate(0.0, window.get_time() as f32, 0.0);
-
+                light_shader.set_matrix4(&CString::new("projection").unwrap(), proj.clone());
+                light_shader.set_matrix4(&CString::new("view").unwrap(), camera.view.clone());
+                light_shader.set_matrix4(&CString::new("transform").unwrap(), transform.clone());
                 shaders.set_matrix4(&CString::new("projection").unwrap(), proj.clone());
                 shaders.set_matrix4(&CString::new("view").unwrap(), camera.view.clone());
                 shaders.set_matrix4(&CString::new("transform").unwrap(), transform);
@@ -95,7 +98,7 @@ fn main() -> Result<(), String> {
                 if *(window.keys_state.get(&Key::N).unwrap()) {
                     model.render_type = gl::FILL;
                 }
-                model.draw();
+                model.draw(&mut shaders);
                 time = window.update_title(time);
             }
             window.update();
@@ -134,4 +137,7 @@ fn input_checker(window: &Window, camera: &mut Camera) {
         camera.pitch = 0.0;
         camera.yaw = 0.0;
     }
+    // if *(window.keys_state.get(&Key::T).unwrap()) {
+    //     toggle_texture_mode(true);
+    // }
 }

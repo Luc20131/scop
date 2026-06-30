@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::SplitWhitespace};
+use std::{collections::HashMap, path::PathBuf, str::SplitWhitespace};
 
 pub const ILLU_MODE_COLOR_ON_AND_AMBIENT_OFF: u8 = 0;
 pub const ILLU_MODE_COLOR_ON_AND_AMBIENT_ON: u8 = 1;
@@ -16,10 +16,10 @@ pub const ILLU_MODE_CASTS_SHADOWS_INVI_SURFACES: u8 = 10;
 pub struct MtlFile {
     pub path: PathBuf,
     pub content: String,
-    pub materials: Vec<Material>,
+    pub materials: HashMap<String, Material>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 struct RGB {
     red: f32,
     green: f32,
@@ -57,8 +57,6 @@ impl RGB {
 }
 
 #[derive(Debug, Clone)]
-#[allow(unused)]
-
 pub struct Material {
     pub name: String,
     ka: RGB,
@@ -94,6 +92,20 @@ impl Default for Material {
             map_d: PathBuf::default(),
             map_bump: PathBuf::default(),
         }
+    }
+}
+
+impl Material {
+    fn ambient_color(&self) -> RGB {
+        return self.ka;
+    }
+
+    fn diffuse_color(&self) -> RGB {
+        return self.kd;
+    }
+
+    fn specular_color(&self) -> RGB {
+        return self.ks;
     }
 }
 
@@ -165,7 +177,7 @@ impl MtlFile {
                     _ => {}
                 }
             }
-            self.materials.push(mtl);
+            self.materials.insert(mtl.name.clone(), mtl);
         }
     }
 }

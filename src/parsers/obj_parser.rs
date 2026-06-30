@@ -3,7 +3,6 @@ use std::{
     fs::read_to_string,
     io::{self},
     path::{Path, PathBuf},
-    str::SplitWhitespace,
     vec,
 };
 
@@ -13,6 +12,7 @@ use crate::{
         model::Model,
     },
     math::vec3::Vec3,
+    parsers::mtl_parser::Material,
 };
 
 use super::mtl_parser::MtlFile;
@@ -26,6 +26,7 @@ pub struct ObjFile {
     pub normals: Vec<Vec3>,
     pub tex_coord: Vec<TexCoord>,
     pub mtl_files: Vec<MtlFile>,
+    pub materials: HashMap<String, Material>,
     pub model: Model,
 }
 
@@ -52,6 +53,7 @@ impl ObjFile {
             path: path.to_path_buf(),
             mtl_files: vec![],
             model: Model::default(),
+            materials: HashMap::new(),
         };
         obj.parse(content);
         obj.modelise();
@@ -63,6 +65,7 @@ impl ObjFile {
             tex_coord: obj.tex_coord,
             mtl_files: obj.mtl_files,
             model: obj.model,
+            materials: obj.materials,
         })
     }
 
@@ -101,7 +104,7 @@ impl ObjFile {
             let mut mtl_file: MtlFile = MtlFile {
                 path: (path.clone()),
                 content: content,
-                materials: vec![],
+                materials: HashMap::new(),
             };
             if !mtl_file.content.is_empty() {
                 mtl_file.parse();
@@ -154,7 +157,7 @@ impl ObjFile {
                 println!("obj name: {}", data);
                 self.model.meshes.last_mut().unwrap().name = data.to_string();
             }
-            "g " => {
+            "g" => {
                 self.model.meshes.push(Mesh::default());
                 println!("group name: {}", data);
                 self.model.meshes.last_mut().unwrap().name = data.to_string();
@@ -173,7 +176,13 @@ impl ObjFile {
                 }
             }
             "s" => {}
-            "usemtl" => {}
+            "usemtl" => {
+                if self.model.meshes.len() == 0 {
+                    self.model.meshes.push(Mesh::default());
+                }
+                // let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
+                // msh.material = self.materials.get(&data.to_string()).unwrap().clone();
+            }
             "l" => {}
             _ => {}
         }
@@ -200,16 +209,20 @@ impl ObjFile {
         for mesh in &mut self.model.meshes {
             let mut indice_map: HashMap<u32, u32> = HashMap::<u32, u32>::new();
             let mut index: u32 = 0;
+            let mut face_color: f32 = 0.0;
             for face in &mesh.faces {
+                face_color += 0.2;
+                if face_color >= 1.0 {
+                    face_color = 0.0;
+                }
                 for face_elem in face {
                     if !indice_map.contains_key(&face_elem.vertex) {
                         index += 1;
                         indice_map.entry(face_elem.vertex).insert_entry(index);
-
-                        let v_indice = face_elem.vertex - 1;
-                        mesh.vertices.push(self.vertex[v_indice as usize].x);
-                        mesh.vertices.push(self.vertex[v_indice as usize].y);
-                        mesh.vertices.push(self.vertex[v_indice as usize].z);
+                        let v_indice: usize = (face_elem.vertex - 1) as usize;
+                        mesh.vertices.push(self.vertex[v_indice].x);
+                        mesh.vertices.push(self.vertex[v_indice].y);
+                        mesh.vertices.push(self.vertex[v_indice].z);
                         if self.tex_coord.len() > face_elem.tex_coord.unwrap_or_default() as usize {
                             mesh.vertices.push(
                                 self.tex_coord[face_elem.tex_coord.unwrap_or_default() as usize].0,
@@ -218,7 +231,7 @@ impl ObjFile {
                                 self.tex_coord[face_elem.tex_coord.unwrap_or_default() as usize].1,
                             );
                         } else {
-                            mesh.vertices.push(0.0);
+                            mesh.vertices.push(face_color);
                             mesh.vertices.push(0.0);
                         }
                         if self.normals.len() > face_elem.normals.unwrap_or_default() as usize {
@@ -236,12 +249,12 @@ impl ObjFile {
                             mesh.vertices.push(0.0);
                             mesh.vertices.push(0.0);
                         }
+                        mesh.vertices.push(face_color);
                     }
                     mesh.indices
                         .push(*indice_map.entry(face_elem.vertex).or_default() - 1);
                 }
             }
-            // dbg!(&mesh.vertices);
             mesh.setup_mesh();
         }
     }

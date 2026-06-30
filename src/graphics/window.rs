@@ -1,5 +1,7 @@
-use std::collections::HashMap;
 use glfw::{Action, Context, Key, MouseButton, WindowEvent};
+use std::collections::HashMap;
+
+use crate::graphics::mesh::toggle_texture_mode;
 
 pub struct MouseState {
     pub mouse_buttons: HashMap<MouseButton, bool>,
@@ -41,6 +43,7 @@ impl Window {
                 (Key::V, false),
                 (Key::B, false),
                 (Key::N, false),
+                (Key::T, false),
             ]),
             mouse_state: MouseState {
                 mouse_buttons: HashMap::from([
@@ -152,6 +155,11 @@ impl Window {
                         .mouse_buttons
                         .entry(MouseButton::Left)
                         .insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::T, _, Action::Press, _) => {
+                    self.keys_state
+                        .entry(Key::T)
+                        .insert_entry(toggle_texture_mode(true));
                 }
                 _ => {}
             }

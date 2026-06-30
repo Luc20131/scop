@@ -2,13 +2,13 @@ use image::{EncodableLayout, ImageBuffer, Rgba};
 use std::{ffi::OsString, path::Path};
 
 #[derive(Debug, Clone)]
-#[allow(unused)]
 pub struct Texture {
     pub id: u32,
     pub name: OsString,
     pub data: ImageBuffer<Rgba<u8>, Vec<u8>>,
     pub width: u32,
     pub height: u32,
+    pub _type: String,
 }
 
 impl Texture {
@@ -24,6 +24,7 @@ impl Texture {
             width: bmp.width(),
             height: bmp.height(),
             data: bmp,
+            _type: "".to_string(),
         }
     }
 
