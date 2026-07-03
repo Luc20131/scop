@@ -44,6 +44,8 @@ impl Window {
                 (Key::B, false),
                 (Key::N, false),
                 (Key::T, false),
+                (Key::Left, false),
+                (Key::Right, false),
             ]),
             mouse_state: MouseState {
                 mouse_buttons: HashMap::from([
@@ -160,6 +162,18 @@ impl Window {
                     self.keys_state
                         .entry(Key::T)
                         .insert_entry(toggle_texture_mode(true));
+                }
+                glfw::WindowEvent::Key(Key::Left, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::Left).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::Left, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::Left).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::Right, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::Right).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::Right, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::Right).insert_entry(false);
                 }
                 _ => {}
             }

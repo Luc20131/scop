@@ -6,7 +6,7 @@ use gl::types::{GLfloat, GLsizei};
 
 use crate::graphics::gl_wrapper::{BufferObject, Vao, VertexAttribute};
 use crate::graphics::shaders::Shader;
-use crate::graphics::texture::{self, Texture};
+use crate::graphics::texture::Texture;
 use crate::math::vec3::Vec3;
 use crate::parsers::mtl_parser::Material;
 
@@ -121,22 +121,34 @@ impl Mesh {
         self.vao.unbind();
     }
 
-    pub fn draw(&self, render_type: u32, shader: &mut Shader) {
+    pub fn draw(&self, render_type: u32, shader: &mut Shader, cam_pos: Vec3) {
         shader.use_prog();
         self.vao.bind();
         unsafe {
-            let texMode = &CString::new("aTexMode").unwrap();
+            // shader.set_vec3(
+            //     "objectColor",
+            //     &self.material.ambient_color().rbg_to_array().as_slice(),
+            // );
+            shader.set_float("ambientStrength", self.material.ka.red);
+            shader.set_float("specularStrength", self.material.ks.red);
+            shader.set_vec3("lightColor", &[1.0, 1.0, 1.0]);
+            shader.set_vec3("viewPos", &cam_pos.as_slice());
+            shader.set_vec3("lightPos", &[50.0, 10.0, 10.0]);
+
             if toggle_texture_mode(false) {
-                shader.set_int(texMode, 1);
-                let mut tex_counter: u32 = 0;
+                shader.set_int("aTexMode", 1);
+                let mut tex_counter: i32 = 0;
                 for texture in &self.textures {
-                    gl::ActiveTexture(TEXTURE0 + tex_counter);
-                    let tmp = &CString::new("ourTexture").unwrap();
-                    gl::Uniform1i(gl::GetUniformLocation(shader.id, tmp.as_ptr()), 0);
+                    gl::ActiveTexture(TEXTURE0 + (tex_counter as u32));
+                    let tmp = &CString::new(
+                        ("ourTexture".to_string() + tex_counter.to_string().as_str()),
+                    )
+                    .unwrap();
+                    shader.set_int("ourTexture", tex_counter);
                     tex_counter += 1;
                 }
             } else {
-                shader.set_int(texMode, 0);
+                shader.set_int("aTexMode", 0);
             }
             gl::PolygonMode(gl::FRONT_AND_BACK, render_type);
             gl::DrawElements(

@@ -113,6 +113,11 @@ impl ObjFile {
                     mtl_file.materials.iter().count()
                 );
             }
+            for material in &mtl_file.materials {
+                self.materials
+                    .entry(material.0.clone())
+                    .insert_entry(material.1.clone());
+            }
             self.mtl_files.push(mtl_file);
         } else {
             println!("Failed to read {}", path.display());
@@ -180,8 +185,9 @@ impl ObjFile {
                 if self.model.meshes.len() == 0 {
                     self.model.meshes.push(Mesh::default());
                 }
-                // let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
-                // msh.material = self.materials.get(&data.to_string()).unwrap().clone();
+                let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
+                dbg!(data);
+                msh.material = self.materials.get(&data.to_string()).cloned().unwrap_or_default();
             }
             "l" => {}
             _ => {}

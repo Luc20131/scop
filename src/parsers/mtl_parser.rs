@@ -20,10 +20,10 @@ pub struct MtlFile {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct RGB {
-    red: f32,
-    green: f32,
-    blue: f32,
+pub struct RGB {
+    pub red: f32,
+    pub green: f32,
+    pub blue: f32,
 }
 
 impl Default for RGB {
@@ -37,6 +37,10 @@ impl Default for RGB {
 }
 
 impl RGB {
+    pub fn rbg_to_array(&self) -> [f32; 3] {
+        [self.red, self.green, self.blue]
+    }
+
     fn set_value_from_words(&mut self, mut words: SplitWhitespace<'_>) {
         self.red = words
             .next()
@@ -59,9 +63,9 @@ impl RGB {
 #[derive(Debug, Clone)]
 pub struct Material {
     pub name: String,
-    ka: RGB,
-    kd: RGB,
-    ks: RGB,
+    pub ka: RGB,
+    pub kd: RGB,
+    pub ks: RGB,
     ns: f32,
     ni: f32,
     d: f32,
@@ -96,11 +100,11 @@ impl Default for Material {
 }
 
 impl Material {
-    fn ambient_color(&self) -> RGB {
+    pub fn ambient_color(&self) -> RGB {
         return self.ka;
     }
 
-    fn diffuse_color(&self) -> RGB {
+    pub fn diffuse_color(&self) -> RGB {
         return self.kd;
     }
 

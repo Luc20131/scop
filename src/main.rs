@@ -1,6 +1,6 @@
+use gl::ClampColor;
 use scop::graphics::camera::Camera;
 use scop::graphics::light::Light;
-use scop::graphics::mesh::toggle_texture_mode;
 use scop::graphics::shaders::Shader;
 use scop::graphics::texture::Texture;
 use scop::graphics::window::Window;
@@ -28,14 +28,16 @@ fn main() -> Result<(), String> {
     if let Some(obj) = ObjFile::new(&obj_path) {
         let mut light_shader = Shader::new(
             "./src/graphics/shaders_files/light.vert",
-            "./src/graphics/shaders_files/fragment.frag",
+            "./src/graphics/shaders_files/light.frag",
         );
-        // let light = Light::new(light_shader.clone());
+        let mut light = Light::new(light_shader.clone());
+
         println!(
             "Obj vertex : {}\nMtl files nb: {}",
             obj.vertex.len(),
             obj.mtl_files.len()
         );
+
         let mut model = obj.model;
         for msh in &model.meshes {
             println!(
@@ -53,19 +55,19 @@ fn main() -> Result<(), String> {
         );
 
         let mut time = window.get_time();
-        let scaling: f32 = 1.0;
+        let scaling: f32 = 5.0;
         let mut camera: Camera = Camera::new();
         camera.set_pos(Vec3 {
             x: 0.0,
-            y: 0.0,
-            z: 10.0,
+            y: 50.0,
+            z: 100.0,
         });
 
-        let proj: Matrix4<f32> = Matrix4::<f32>::perspective(PI / 2.0, 800.0 / 600.0, 0.1, 500.0);
-        let mut tex = Texture::new(Path::new("./resources/dirt.bmp"));
+        let proj: Matrix4<f32> = Matrix4::<f32>::perspective(PI / 2.0, 800.0 / 600.0, 0.1, 3000.0);
+        let mut tex = Texture::new(Path::new("resources/texture.bmp"));
         tex.setup_tex();
 
-        shaders.use_prog();
+        light_shader.use_prog();
         unsafe {
             gl::Enable(gl::DEPTH_TEST);
             gl::DepthFunc(gl::LESS);
@@ -76,18 +78,20 @@ fn main() -> Result<(), String> {
                 camera.update_camera_pos();
                 gl::ClearColor(0.0, 0.0, 0.0, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-                shaders.use_prog();
+                // shaders.use_prog();
 
                 let mut transform: Matrix4<f32> = Matrix4::identity();
                 transform.translate(0.0, 0.0, 0.0);
                 transform = transform.scale(scaling);
                 // transform.rotate(0.0, window.get_time() as f32, 0.0);
-                light_shader.set_matrix4(&CString::new("projection").unwrap(), proj.clone());
-                light_shader.set_matrix4(&CString::new("view").unwrap(), camera.view.clone());
-                light_shader.set_matrix4(&CString::new("transform").unwrap(), transform.clone());
-                shaders.set_matrix4(&CString::new("projection").unwrap(), proj.clone());
-                shaders.set_matrix4(&CString::new("view").unwrap(), camera.view.clone());
-                shaders.set_matrix4(&CString::new("transform").unwrap(), transform);
+                // shaders.set_matrix4("projection", proj.clone());
+                // shaders.set_matrix4("view", camera.view.clone());
+                // shaders.set_matrix4("transform", transform.clone());
+
+                light_shader.use_prog();
+                light_shader.set_matrix4("projection", proj.clone());
+                light_shader.set_matrix4("view", camera.view.clone());
+                light_shader.set_matrix4("transform", transform);
 
                 if *(window.keys_state.get(&Key::V).unwrap()) {
                     model.render_type = gl::POINT;
@@ -98,7 +102,8 @@ fn main() -> Result<(), String> {
                 if *(window.keys_state.get(&Key::N).unwrap()) {
                     model.render_type = gl::FILL;
                 }
-                model.draw(&mut shaders);
+                model.draw(&mut light_shader, camera.pos.clone());
+                // light.draw();
                 time = window.update_title(time);
             }
             window.update();
@@ -108,23 +113,35 @@ fn main() -> Result<(), String> {
 }
 
 fn input_checker(window: &Window, camera: &mut Camera) {
+    // if *(window.keys_state.get(&Key::Left).unwrap()) {
+    //     camera.pitch += 2.0;
+    //     if camera.pitch > 89.0 {
+    //         camera.pitch = 89.0;
+    //     }
+    // }
+    // if *(window.keys_state.get(&Key::Right).unwrap()) {
+    //     camera.pitch -= 2.0;
+    //     if camera.pitch < -89.0 {
+    //         camera.pitch = -89.0;
+    //     }
+    // }
     if *(window.keys_state.get(&Key::S).unwrap()) {
-        camera.pitch -= 2.0;
-        if camera.pitch < -89.0 {
-            camera.pitch = -89.0;
-        }
+        camera.pos.z += 2.0;
     }
     if *(window.keys_state.get(&Key::W).unwrap()) {
-        camera.pitch += 2.0;
-        if camera.pitch > 89.0 {
-            camera.pitch = 89.0;
-        }
+        camera.pos.z -= 2.0;
     }
     if *(window.keys_state.get(&Key::D).unwrap()) {
-        camera.yaw += 2.0;
+        camera.pos.x += 2.0;
     }
     if *(window.keys_state.get(&Key::A).unwrap()) {
-        camera.yaw -= 2.0;
+        camera.pos.x -= 2.0;
+    }
+    if *(window.keys_state.get(&Key::Right).unwrap()) {
+        camera.yaw -= 1.0;
+    }
+    if *(window.keys_state.get(&Key::Left).unwrap()) {
+        camera.yaw += 1.0;
     }
     if *(window.keys_state.get(&Key::E).unwrap()) {
         camera.roll -= 2.0;

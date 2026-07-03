@@ -56,6 +56,10 @@ impl Vec3 {
             z: v1.x * v2.y - v2.x * v1.y,
         }
     }
+
+    pub fn as_slice(&self) -> [f32; 3] {
+        [self.x, self.y, self.z]
+    }
 }
 
 impl Sub for Vec3 {

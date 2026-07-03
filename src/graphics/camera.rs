@@ -3,7 +3,7 @@ use crate::math::matrix::Matrix4;
 use crate::math::vec3::Vec3;
 
 pub struct Camera {
-    pos: Vec3,
+    pub pos: Vec3,
     front: Vec3,
     up: Vec3,
     pub view: Matrix4<f32>,

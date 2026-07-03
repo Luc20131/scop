@@ -7,8 +7,12 @@ in vec3 Normal;
 uniform sampler2D ourTexture;
 flat in int TexMode;
 
+
+
 void main()
 {
+
+    
     if (TexMode == 1)
         FragColor = texture(ourTexture, TexCoord);
     else
