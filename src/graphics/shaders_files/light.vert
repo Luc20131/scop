@@ -6,9 +6,9 @@ layout(location = 3) in float aColor;
 
 flat out float ourColor;
 out vec2 TexCoord;
-out vec3 Normal;
 flat out int TexMode;
 
+out vec3 Normal;
 out vec3 FragPos;
 
 uniform int aTexMode;
@@ -25,6 +25,6 @@ void main()
     TexMode = aTexMode;
     FragPos = vec3(transform * vec4(aPos, 1.0));
     Normal = mat3(transpose(inverse(transform))) * aNormal;
-
+    // Normal = -Normal;
     gl_Position = projection * view * vec4(FragPos, 1.0);
 }

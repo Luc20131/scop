@@ -187,7 +187,11 @@ impl ObjFile {
                 }
                 let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
                 dbg!(data);
-                msh.material = self.materials.get(&data.to_string()).cloned().unwrap_or_default();
+                msh.material = self
+                    .materials
+                    .get(&data.to_string())
+                    .cloned()
+                    .unwrap_or_default();
             }
             "l" => {}
             _ => {}

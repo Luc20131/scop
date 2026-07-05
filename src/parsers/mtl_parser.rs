@@ -61,6 +61,7 @@ impl RGB {
 }
 
 #[derive(Debug, Clone)]
+#[allow(unused)]
 pub struct Material {
     pub name: String,
     pub ka: RGB,
@@ -81,7 +82,7 @@ pub struct Material {
 impl Default for Material {
     fn default() -> Self {
         Self {
-            name: String::default(),
+            name: "Default".to_string(),
             ka: RGB::default(),
             kd: RGB::default(),
             ks: RGB::default(),
@@ -108,7 +109,7 @@ impl Material {
         return self.kd;
     }
 
-    fn specular_color(&self) -> RGB {
+    pub fn specular_color(&self) -> RGB {
         return self.ks;
     }
 }

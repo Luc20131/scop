@@ -1,68 +1,42 @@
-use std::{mem, ptr};
-
-use gl::types::{GLfloat, GLsizei};
+use std::path::Path;
 
 use crate::{
-    graphics::{
-        gl_wrapper::{BufferObject, Vao, VertexAttribute},
-        shaders::Shader,
-    },
+    graphics::{mesh::Mesh, shaders::Shader},
     math::vec3::Vec3,
+    parsers::{mtl_parser::RGB, obj_parser::ObjFile},
 };
 
 #[derive(Debug, Clone)]
 pub struct Light {
-    color: [f32; 3],
-    pos: Vec3,
-    vao: Vao,
-    vbo: BufferObject,
+    color: RGB,
+    mesh: Mesh,
+    pub pos: Vec3,
     shader: Shader,
 }
 
 impl Light {
     pub fn new(shader: Shader) -> Self {
-        let res = Self {
-            color: [1.0; 3],
-
+        let mut res = Self {
+            color: RGB::default(),
             pos: Vec3::new(100.0, 100.0, 100.0),
-            vao: Vao::new(),
-            vbo: BufferObject::new(gl::ARRAY_BUFFER, gl::STATIC_DRAW),
+            mesh: Mesh::default(),
             shader: shader,
         };
-        res.vao.bind();
-        res.vbo.bind();
-        let tmp = [
-            res.pos.x, res.pos.y, res.pos.z, res.pos.x, res.pos.y, res.pos.z, res.pos.x, res.pos.y,
-            res.pos.z,
-        ];
-        res.vbo.store_f32_data(&tmp);
 
-        let position_attribute = VertexAttribute::new(
-            0,
-            3,
-            gl::FLOAT,
-            gl::FALSE,
-            9 * mem::size_of::<GLfloat>() as GLsizei,
-            ptr::null(),
-        );
-        position_attribute.enable();
-
-        res.vao.unbind();
-        res.vbo.unbind();
+        res.mesh = ObjFile::new(Path::new("./resources/light_cube.obj"))
+            .unwrap()
+            .model
+            .meshes[0]
+            .clone();
+        res.mesh.setup_mesh();
         res
     }
 
-    pub fn draw(&mut self) {
-        self.shader.use_prog();
-        self.vao.bind();
-        // self.shader.set_vec3("objectColor", &[0.31, 0.31, 0.56]);
-        self.shader.set_vec3("ligthColor", self.color.as_slice());
-        self.shader
-            .set_vec3("lightPos", &[self.pos.x, self.pos.y, self.pos.z]);
-        unsafe {
-            gl::PolygonMode(gl::FRONT_AND_BACK, gl::POINT);
-            gl::DrawArrays(gl::TRIANGLES, 0, 3);
-        }
-        self.vao.unbind();
+    pub fn draw(&mut self, cam_pos: Vec3) {
+        self.mesh.draw(gl::TRIANGLES, &mut self.shader, cam_pos);
+    }
+
+    pub fn color(&self) -> RGB {
+        self.color
     }
 }

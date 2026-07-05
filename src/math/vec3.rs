@@ -57,7 +57,7 @@ impl Vec3 {
         }
     }
 
-    pub fn as_slice(&self) -> [f32; 3] {
+    pub fn as_array(&self) -> [f32; 3] {
         [self.x, self.y, self.z]
     }
 }

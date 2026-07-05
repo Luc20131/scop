@@ -1,4 +1,4 @@
-use glfw::{Action, Context, Key, MouseButton, WindowEvent};
+use glfw::{Action, Context, Key, MouseButton, SwapInterval, WindowEvent};
 use std::collections::HashMap;
 
 use crate::graphics::mesh::toggle_texture_mode;
@@ -46,6 +46,12 @@ impl Window {
                 (Key::T, false),
                 (Key::Left, false),
                 (Key::Right, false),
+                (Key::Space, false),
+                (Key::LeftShift, false),
+                (Key::Kp4, false),
+                (Key::Kp6, false),
+                (Key::KpAdd, false),
+                (Key::KpSubtract, false),
             ]),
             mouse_state: MouseState {
                 mouse_buttons: HashMap::from([
@@ -65,6 +71,7 @@ impl Window {
                 .get_proc_address(symbol)
                 .map_or(std::ptr::null(), |f| f as *const _)
         });
+        self.glfw.set_swap_interval(SwapInterval::None);
     }
 
     pub fn should_close(&self) -> bool {
@@ -174,6 +181,42 @@ impl Window {
                 }
                 glfw::WindowEvent::Key(Key::Right, _, Action::Release, _) => {
                     self.keys_state.entry(Key::Right).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::Space, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::Space).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::Space, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::Space).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::LeftShift, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::LeftShift).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::LeftShift, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::LeftShift).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::Kp4, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::Kp4).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::Kp4, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::Kp4).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::Kp6, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::Kp6).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::Kp6, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::Kp6).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::KpAdd, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::KpAdd).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::KpAdd, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::KpAdd).insert_entry(false);
+                }
+                glfw::WindowEvent::Key(Key::KpSubtract, _, Action::Press, _) => {
+                    self.keys_state.entry(Key::KpSubtract).insert_entry(true);
+                }
+                glfw::WindowEvent::Key(Key::KpSubtract, _, Action::Release, _) => {
+                    self.keys_state.entry(Key::KpSubtract).insert_entry(false);
                 }
                 _ => {}
             }

@@ -1,4 +1,3 @@
-use std::ffi::CString;
 use std::{mem, ptr};
 
 use gl::TEXTURE0;
@@ -124,28 +123,24 @@ impl Mesh {
     pub fn draw(&self, render_type: u32, shader: &mut Shader, cam_pos: Vec3) {
         shader.use_prog();
         self.vao.bind();
-        unsafe {
-            // shader.set_vec3(
-            //     "objectColor",
-            //     &self.material.ambient_color().rbg_to_array().as_slice(),
-            // );
-            shader.set_float("ambientStrength", self.material.ka.red);
-            shader.set_float("specularStrength", self.material.ks.red);
-            shader.set_vec3("lightColor", &[1.0, 1.0, 1.0]);
-            shader.set_vec3("viewPos", &cam_pos.as_slice());
-            shader.set_vec3("lightPos", &[50.0, 10.0, 10.0]);
+        self.vbo.bind();
+        // shader.set_vec3(
+        //     "objectColor",
+        //     &self.material.ambient_color().rbg_to_array().as_slice(),
+        // );
+        shader.set_float("ambientStrength", self.material.ambient_color().red);
+        shader.set_float("specularStrength", self.material.specular_color().red);
+        shader.set_vec3("viewPos", &cam_pos.as_array());
 
+        unsafe {
             if toggle_texture_mode(false) {
                 shader.set_int("aTexMode", 1);
                 let mut tex_counter: i32 = 0;
                 for texture in &self.textures {
                     gl::ActiveTexture(TEXTURE0 + (tex_counter as u32));
-                    let tmp = &CString::new(
-                        ("ourTexture".to_string() + tex_counter.to_string().as_str()),
-                    )
-                    .unwrap();
                     shader.set_int("ourTexture", tex_counter);
                     tex_counter += 1;
+                    gl::BindTexture(gl::TEXTURE_2D, texture.id);
                 }
             } else {
                 shader.set_int("aTexMode", 0);
@@ -158,6 +153,7 @@ impl Mesh {
                 ptr::null(),
             );
         }
+        self.vbo.unbind();
         self.vao.unbind();
     }
 }

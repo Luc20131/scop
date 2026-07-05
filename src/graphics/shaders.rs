@@ -1,5 +1,4 @@
 use crate::math::matrix::Matrix4;
-use crate::math::vec3::Vec3;
 use gl::types::{GLchar, GLenum, GLint, GLuint};
 use gl::{self, FRAGMENT_SHADER, VERTEX_SHADER};
 use std::ffi::CString;
