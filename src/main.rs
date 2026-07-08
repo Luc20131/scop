@@ -101,7 +101,7 @@ fn main() -> Result<(), String> {
                 // shaders.set_matrix4("transform", transform.clone());
                 light_shader.use_prog();
                 light_shader.set_vec3("lightColor", light.color().rbg_to_array().as_slice());
-                light_shader.set_vec3("lightPos", light.pos.as_array().as_slice());
+                light_shader.set_vec3("light.position", light.pos.as_array().as_slice());
                 light_shader.set_matrix4("projection", proj.clone());
                 light_shader.set_matrix4("view", camera.view.clone());
                 light_shader.set_matrix4("transform", light_transform.clone());
@@ -130,7 +130,7 @@ fn main() -> Result<(), String> {
                 transform.translate(light.pos.x, light.pos.y, light.pos.z);
                 // transform.translate(10.0, 10.0, 10.0);
                 shaders.set_vec3("lightColor", light.color().rbg_to_array().as_slice());
-                shaders.set_vec3("lightPos", light.pos.as_array().as_slice());
+                shaders.set_vec3("light.position", light.pos.as_array().as_slice());
                 shaders.set_matrix4("projection", proj.clone());
                 shaders.set_matrix4("view", camera.view.clone());
                 shaders.set_matrix4("transform", transform.clone());
@@ -160,10 +160,10 @@ fn input_checker(window: &Window, camera: &mut Camera, light: &mut Light, delta_
     //     }
     // }
     if *(window.keys_state.get(&Key::Kp4).unwrap()) {
-        light.pos.x -= camera_speed;
+        light.pos.x -= camera_speed * 10.0;
     }
     if *(window.keys_state.get(&Key::Kp6).unwrap()) {
-        light.pos.x += camera_speed;
+        light.pos.x += camera_speed * 10.0;
     }
     if *(window.keys_state.get(&Key::S).unwrap()) {
         camera.pos.z += camera_speed;

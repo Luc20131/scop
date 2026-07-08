@@ -128,8 +128,12 @@ impl Mesh {
         //     "objectColor",
         //     &self.material.ambient_color().rbg_to_array().as_slice(),
         // );
-        shader.set_float("ambientStrength", self.material.ambient_color().red);
-        shader.set_float("specularStrength", self.material.specular_color().red);
+        // lightingShader.setFloat("light.constant",  1.0f);
+        shader.set_float("light.linear", 0.022);
+        shader.set_float("light.quadratic", 0.0019);
+
+        shader.set_float("light.ambientStrength", self.material.ambient_color().red);
+        shader.set_float("light.specularStrength", self.material.specular_color().red);
         shader.set_vec3("viewPos", &cam_pos.as_array());
 
         unsafe {
