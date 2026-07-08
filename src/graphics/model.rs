@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use gl::DEBUG_TYPE_UNDEFINED_BEHAVIOR;
-
 use crate::{
     graphics::{mesh::Mesh, shaders::Shader, texture::Texture},
     math::vec3::Vec3,
@@ -31,9 +29,7 @@ impl Default for Model {
 }
 
 impl Model {
-    pub fn draw(&self, shader: &mut Shader, cam_pos: Vec3, index: usize) {
-        // let oui = &self.meshes[index];
-        // oui.draw(self.render_type, shader, cam_pos);
+    pub fn draw(&self, shader: &mut Shader, cam_pos: Vec3) {
         for mesh in &self.meshes {
             mesh.draw(self.render_type, shader, cam_pos.clone());
         }

@@ -71,7 +71,7 @@ impl Window {
                 .get_proc_address(symbol)
                 .map_or(std::ptr::null(), |f| f as *const _)
         });
-        self.glfw.set_swap_interval(SwapInterval::None);
+        self.glfw.set_swap_interval(SwapInterval::Sync(1));
     }
 
     pub fn should_close(&self) -> bool {

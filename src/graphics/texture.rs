@@ -20,7 +20,7 @@ impl Texture {
             gl::GenTextures(1, &mut id);
         }
         Self {
-            id: id,
+            id,
             name: path.file_name().unwrap_or_default().to_os_string(),
             width: bmp.width(),
             height: bmp.height(),

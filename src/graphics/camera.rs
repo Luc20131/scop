@@ -78,3 +78,9 @@ impl Camera {
 
     // TODO zoom and camera translation
 }
+
+impl Default for Camera {
+    fn default() -> Self {
+        Self::new()
+    }
+}

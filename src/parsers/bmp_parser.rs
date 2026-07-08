@@ -35,7 +35,7 @@ pub fn image_loader(path: &Path) -> BmpImage {
     // dbg!(img_data.name);
 }
 
-fn format_data(content: &Vec<u8>, img_name: &str) -> BmpImage {
+fn format_data(content: &[u8], img_name: &str) -> BmpImage {
     let file_offset = u32::from_ne_bytes(content[10..14].try_into().unwrap());
     let img_size = u32::from_ne_bytes(content[34..38].try_into().unwrap());
     let header: BmpImage = BmpImage {

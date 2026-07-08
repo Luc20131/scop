@@ -23,7 +23,7 @@ fn main() -> Result<(), String> {
     window.init_gl();
 
     let obj_path: &Path = Path::new(&arg);
-    if let Some(obj) = ObjFile::new(&obj_path) {
+    if let Some(obj) = ObjFile::new(obj_path) {
         let mut light_shader = Shader::new(
             "./src/graphics/shaders_files/light.vert",
             "./src/graphics/shaders_files/light.frag",
@@ -32,7 +32,7 @@ fn main() -> Result<(), String> {
             "./src/graphics/shaders_files/vertex.vert",
             "./src/graphics/shaders_files/fragment.frag",
         );
-        let mut light_obj__shader = Shader::new(
+        let _light_obj_shader = Shader::new(
             "./src/graphics/shaders_files/light_obj.vert",
             "./src/graphics/shaders_files/light_obj.frag",
         );
@@ -56,7 +56,7 @@ fn main() -> Result<(), String> {
         // }
 
         let mut time = window.get_time();
-        let scaling: f32 = 50.0;
+        let scaling: f32 = 1.0;
         let mut camera: Camera = Camera::new();
         camera.set_pos(Vec3 {
             x: 0.0,
@@ -79,14 +79,14 @@ fn main() -> Result<(), String> {
         }
         let mut delta_time = 0.0; // Time between current frame and last frame
         let mut last_frame = 0.0; // Time of last frame
-        let mut index: usize = 0;
+        let mut _index: usize = 0;
         while !window.should_close() {
             unsafe {
-                let current_frame = window.get_time();
+                let current_frame: f32 = window.get_time() as f32;
                 delta_time = current_frame - last_frame;
                 last_frame = current_frame;
 
-                input_checker(&window, &mut camera, &mut light, delta_time as f32);
+                input_checker(&window, &mut camera, &mut light, delta_time);
                 camera.update_camera_pos();
                 gl::ClearColor(0.0, 0.0, 0.0, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
@@ -117,15 +117,14 @@ fn main() -> Result<(), String> {
                 }
                 if *(window.keys_state.get(&Key::KpAdd).unwrap()) {
                     window.keys_state.entry(Key::KpAdd).insert_entry(false);
-                    index += 1;
+                    _index += 1;
                 }
                 if *(window.keys_state.get(&Key::KpSubtract).unwrap()) {
                     window.keys_state.entry(Key::KpSubtract).insert_entry(false);
-
-                    index -= 1;
+                    _index -= 1;
                 }
                 // light.draw();
-                model.draw(&mut light_shader, camera.pos.clone(), index);
+                model.draw(&mut light_shader, camera.pos.clone());
 
                 shaders.use_prog();
                 transform.translate(light.pos.x, light.pos.y, light.pos.z);
@@ -147,7 +146,7 @@ fn main() -> Result<(), String> {
 }
 
 fn input_checker(window: &Window, camera: &mut Camera, light: &mut Light, delta_time: f32) {
-    let camera_speed = 100.0 * delta_time;
+    let camera_speed = 10.0 * delta_time;
     // if *(window.keys_state.get(&Key::Left).unwrap()) {
     //     camera.pitch += 2.0;
     //     if camera.pitch > 89.0 {
@@ -185,16 +184,16 @@ fn input_checker(window: &Window, camera: &mut Camera, light: &mut Light, delta_
         camera.pos.x -= camera_speed;
     }
     if *(window.keys_state.get(&Key::Right).unwrap()) {
-        camera.yaw -= camera_speed;
+        camera.yaw -= camera_speed * 10.0;
     }
     if *(window.keys_state.get(&Key::Left).unwrap()) {
-        camera.yaw += camera_speed;
+        camera.yaw += camera_speed * 10.0;
     }
     if *(window.keys_state.get(&Key::E).unwrap()) {
-        camera.roll -= camera_speed;
+        camera.roll -= camera_speed * 10.0;
     }
     if *(window.keys_state.get(&Key::Q).unwrap()) {
-        camera.roll += camera_speed;
+        camera.roll += camera_speed * 10.0;
     }
     if *(window.keys_state.get(&Key::R).unwrap()) {
         camera.roll = 0.0;

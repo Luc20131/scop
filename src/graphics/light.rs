@@ -20,10 +20,10 @@ impl Light {
             color: RGB::default(),
             pos: Vec3::new(100.0, 100.0, 100.0),
             mesh: Mesh::default(),
-            shader: shader,
+            shader,
         };
 
-        res.mesh = ObjFile::new(Path::new("./resources/light_cube.obj"))
+        res.mesh = ObjFile::new(Path::new("./resources/triangle.obj"))
             .unwrap()
             .model
             .meshes[0]

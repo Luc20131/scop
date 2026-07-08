@@ -68,7 +68,7 @@ impl Mesh {
     }
 
     pub fn setup_mesh(&mut self) {
-        if self.faces.len() <= 0 {
+        if self.faces.is_empty() {
             return;
         }
         println!("setup mesh: {}", self.name);
@@ -135,11 +135,9 @@ impl Mesh {
         unsafe {
             if toggle_texture_mode(false) {
                 shader.set_int("aTexMode", 1);
-                let mut tex_counter: i32 = 0;
-                for texture in &self.textures {
+                for (tex_counter, texture) in (0_i32..).zip(self.textures.iter()) {
                     gl::ActiveTexture(TEXTURE0 + (tex_counter as u32));
                     shader.set_int("ourTexture", tex_counter);
-                    tex_counter += 1;
                     gl::BindTexture(gl::TEXTURE_2D, texture.id);
                 }
             } else {
@@ -164,6 +162,6 @@ pub fn toggle_texture_mode(toggle: bool) -> bool {
         if toggle {
             TEXTURE_MODE = !TEXTURE_MODE;
         }
-        return TEXTURE_MODE;
+        TEXTURE_MODE
     }
 }

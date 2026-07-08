@@ -102,15 +102,15 @@ impl Default for Material {
 
 impl Material {
     pub fn ambient_color(&self) -> RGB {
-        return self.ka;
+        self.ka
     }
 
     pub fn diffuse_color(&self) -> RGB {
-        return self.kd;
+        self.kd
     }
 
     pub fn specular_color(&self) -> RGB {
-        return self.ks;
+        self.ks
     }
 }
 
