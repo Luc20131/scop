@@ -39,4 +39,8 @@ impl Light {
     pub fn color(&self) -> RGB {
         self.color
     }
+
+    pub fn change_light_color(&mut self, color: RGB) {
+        self.color = color;
+    }
 }

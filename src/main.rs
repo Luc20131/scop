@@ -5,6 +5,7 @@ use scop::graphics::texture::Texture;
 use scop::graphics::window::Window;
 use scop::math::matrix::Matrix4;
 use scop::math::vec3::Vec3;
+use scop::parsers::mtl_parser::RGB;
 use scop::parsers::obj_parser::ObjFile;
 use std::env;
 use std::f32::consts::PI;
@@ -77,9 +78,14 @@ fn main() -> Result<(), String> {
             // gl::CullFace(gl::FRONT);
             // gl::FrontFace(gl::CW);
         }
-        let mut delta_time = 0.0; // Time between current frame and last frame
+        let mut delta_time; // Time between current frame and last frame
         let mut last_frame = 0.0; // Time of last frame
         let mut _index: usize = 0;
+        light.change_light_color(RGB {
+            red: 0.5,
+            green: 0.8,
+            blue: 0.8,
+        });
         while !window.should_close() {
             unsafe {
                 let current_frame: f32 = window.get_time() as f32;
@@ -95,10 +101,6 @@ fn main() -> Result<(), String> {
                 transform.translate(0.0, 0.0, 0.0);
                 transform = transform.scale(scaling);
                 let light_transform = transform.clone();
-                // transform.rotate(0.0, window.get_time() as f32, 0.0);
-                // shaders.set_matrix4("projection", proj.clone());
-                // shaders.set_matrix4("view", camera.view.clone());
-                // shaders.set_matrix4("transform", transform.clone());
                 light_shader.use_prog();
                 light_shader.set_vec3("lightColor", light.color().rbg_to_array().as_slice());
                 light_shader.set_vec3("light.position", light.pos.as_array().as_slice());
@@ -128,13 +130,9 @@ fn main() -> Result<(), String> {
 
                 shaders.use_prog();
                 transform.translate(light.pos.x, light.pos.y, light.pos.z);
-                // transform.translate(10.0, 10.0, 10.0);
-                shaders.set_vec3("lightColor", light.color().rbg_to_array().as_slice());
-                shaders.set_vec3("light.position", light.pos.as_array().as_slice());
-                shaders.set_matrix4("projection", proj.clone());
                 shaders.set_matrix4("view", camera.view.clone());
                 shaders.set_matrix4("transform", transform.clone());
-                // model.draw(&mut light_shader, camera.pos.clone());
+                shaders.set_matrix4("projection", proj.clone());
                 light.draw(camera.pos.clone());
 
                 time = window.update_title(time);

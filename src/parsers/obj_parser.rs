@@ -221,9 +221,10 @@ impl ObjFile {
                 }
                 for face_elem in face {
                     let key = (face_elem.vertex, face_elem.tex_coord, face_elem.normals);
-                    if !indice_map.contains_key(&key) {
+                    if let std::collections::hash_map::Entry::Vacant(entry) = indice_map.entry(key)
+                    {
                         index += 1;
-                        indice_map.insert(key, index);
+                        entry.insert(index);
                         let v_indice: usize = (face_elem.vertex - 1) as usize;
                         mesh.vertices.push(self.vertex[v_indice].x);
                         mesh.vertices.push(self.vertex[v_indice].y);
@@ -359,11 +360,4 @@ fn data_to_face(data: &str) -> Option<Face> {
         face.push(face_elem);
     }
     Some(face)
-}
-
-fn parse_obj_index(index: Option<&str>) -> i32 {
-    match index {
-        Some(i) => i.parse::<i32>().unwrap_or(-1),
-        None => -1,
-    }
 }
