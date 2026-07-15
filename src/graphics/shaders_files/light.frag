@@ -50,9 +50,9 @@ void main()
 
     vec3 result = (ambient + diffuse + specular) * vec3(1.0);
     if (TexMode == 1)
-        FragColor = vec4(result, 1.0) * vec4(0.2, 0.2, 0.2, 1.0);
+        // FragColor = vec4(result, 1.0) * vec4(0.2, 0.2, 0.2, 1.0);
+        FragColor = vec4(result, 1.0) * texture(ourTexture, TexCoord);
     else
         FragColor = vec4(normalize(Normal) * 0.5 + 0.5, 1.0);
     //     FragColor = vec4(result, 1.0);
-    // FragColor = vec4(result, 1.0) * texture(ourTexture, TexCoord);
 }

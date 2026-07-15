@@ -183,7 +183,6 @@ impl ObjFile {
                     self.model.meshes.push(Mesh::default());
                 }
                 let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
-                dbg!(data);
                 msh.material = self.materials.get(data).cloned().unwrap_or_default();
             }
             "l" => {}
@@ -229,26 +228,30 @@ impl ObjFile {
                         mesh.vertices.push(self.vertex[v_indice].x);
                         mesh.vertices.push(self.vertex[v_indice].y);
                         mesh.vertices.push(self.vertex[v_indice].z);
-                        if self.tex_coord.len() > face_elem.tex_coord.unwrap_or_default() as usize {
-                            let tex =
-                                self.tex_coord[face_elem.tex_coord.unwrap_or_default() as usize];
-                            mesh.vertices.push(tex.0);
-                            mesh.vertices.push(tex.1);
+                        if let Some(tex) = face_elem.tex_coord {
+                            if self.tex_coord.len() > (tex - 1) as usize {
+                                let t = self.tex_coord[(tex - 1) as usize];
+                                mesh.vertices.push(t.0);
+                                mesh.vertices.push(1.0 - t.1);
+                            }
                         } else {
-                            mesh.vertices.push(face_color);
-                            mesh.vertices.push(0.0);
+                            mesh.vertices.push(0.75);
+                            mesh.vertices.push(0.25);
                         }
-                        if self.normals.len() > face_elem.normals.unwrap_or_default() as usize {
-                            let norm = self.normals
-                                [(face_elem.normals.unwrap_or_default() - 1) as usize]
-                                .clone();
+                        if let Some(normal) = face_elem.normals {
+                            let norm = self.normals[(normal - 1) as usize].clone();
                             mesh.vertices.push(norm.x);
                             mesh.vertices.push(norm.y);
                             mesh.vertices.push(norm.z);
                         } else {
-                            mesh.vertices.push(0.0);
-                            mesh.vertices.push(0.0);
-                            mesh.vertices.push(0.0);
+                            let new_norm = compute_normal(
+                                self.vertex[(face[0].vertex - 1) as usize].clone(),
+                                self.vertex[(face[1].vertex - 1) as usize].clone(),
+                                self.vertex[(face[2].vertex - 1) as usize].clone(),
+                            );
+                            mesh.vertices.push(new_norm.x);
+                            mesh.vertices.push(new_norm.y);
+                            mesh.vertices.push(new_norm.x);
                         }
                         mesh.vertices.push(face_color);
                     }
@@ -360,4 +363,10 @@ fn data_to_face(data: &str) -> Option<Face> {
         face.push(face_elem);
     }
     Some(face)
+}
+
+fn compute_normal(v1: Vec3, v2: Vec3, v3: Vec3) -> Vec3 {
+    let mut edge1 = v2 - v1.clone();
+    let edge2 = v3 - v1;
+    edge1.cross(edge2).normalize()
 }

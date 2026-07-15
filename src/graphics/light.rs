@@ -18,7 +18,7 @@ impl Light {
     pub fn new(shader: Shader) -> Self {
         let mut res = Self {
             color: RGB::default(),
-            pos: Vec3::new(20.0, 20.0, 20.0),
+            pos: Vec3::new(10.0, 10.0, 10.0),
             mesh: Mesh::default(),
             shader,
         };

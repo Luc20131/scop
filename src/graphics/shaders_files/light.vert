@@ -20,11 +20,8 @@ void main()
 {
     ourColor = aColor;
     TexCoord = vec2(aTexCoord.x, aTexCoord.y);
-    // Normal = mat3(transpose(inverse(transform))) * (aNormal * -1.0);
-
     TexMode = aTexMode;
     FragPos = vec3(transform * vec4(aPos, 1.0));
     Normal = mat3(transpose(inverse(transform))) * aNormal;
-    // Normal = -Normal;
     gl_Position = projection * view * vec4(FragPos, 1.0);
 }

@@ -69,7 +69,6 @@ fn main() -> Result<(), String> {
             Matrix4::<f32>::perspective(PI / 2.0, 1920.0 / 1080.0, 0.1, 3000.0);
         let mut tex = Texture::new(Path::new("resources/oui.bmp"));
         tex.setup_tex();
-
         light_shader.use_prog();
         unsafe {
             gl::Enable(gl::DEPTH_TEST);
@@ -81,11 +80,6 @@ fn main() -> Result<(), String> {
         let mut delta_time; // Time between current frame and last frame
         let mut last_frame = 0.0; // Time of last frame
         let mut _index: usize = 0;
-        light.change_light_color(RGB {
-            red: 0.5,
-            green: 0.8,
-            blue: 0.8,
-        });
         while !window.should_close() {
             unsafe {
                 let current_frame: f32 = window.get_time() as f32;
@@ -157,10 +151,10 @@ fn input_checker(window: &Window, camera: &mut Camera, light: &mut Light, delta_
     //         camera.pitch = -89.0;
     //     }
     // }
-    if *(window.keys_state.get(&Key::Kp4).unwrap()) {
+    if *(window.keys_state.get(&Key::Q).unwrap()) {
         light.pos.x -= camera_speed * 10.0;
     }
-    if *(window.keys_state.get(&Key::Kp6).unwrap()) {
+    if *(window.keys_state.get(&Key::E).unwrap()) {
         light.pos.x += camera_speed * 10.0;
     }
     if *(window.keys_state.get(&Key::S).unwrap()) {
@@ -187,12 +181,12 @@ fn input_checker(window: &Window, camera: &mut Camera, light: &mut Light, delta_
     if *(window.keys_state.get(&Key::Left).unwrap()) {
         camera.yaw += camera_speed * 10.0;
     }
-    if *(window.keys_state.get(&Key::E).unwrap()) {
-        camera.roll -= camera_speed * 10.0;
-    }
-    if *(window.keys_state.get(&Key::Q).unwrap()) {
-        camera.roll += camera_speed * 10.0;
-    }
+    // if *(window.keys_state.get(&Key::E).unwrap()) {
+    //     camera.pitch -= camera_speed * 10.0;
+    // }
+    // if *(window.keys_state.get(&Key::Q).unwrap()) {
+    //     camera.pitch += camera_speed * 10.0;
+    // }
     if *(window.keys_state.get(&Key::R).unwrap()) {
         camera.roll = 0.0;
         camera.pitch = 0.0;
