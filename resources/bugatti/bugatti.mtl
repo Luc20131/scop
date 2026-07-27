@@ -10,6 +10,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
+map_Kd ./dirt.bmp
 
 newmtl ENGINE
 Ns 96.078431
@@ -20,6 +21,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
+map_Kd ./oui.bmp
 
 newmtl GRILL.004
 Ns 96.078431
@@ -40,6 +42,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
+map_Kd ./dirt.bmp
 
 newmtl NAVY
 Ns 96.078431
@@ -58,6 +61,7 @@ Kd 0.8 0.8 0.8
 Ks 0.8 0.8 0.8
 d 1
 illum 2
+map_Kd ./dirt.bmp
 
 newmtl Nut.004
 Ns 96.078431
@@ -148,6 +152,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
+map_Kd ./oui.bmp
 
 newmtl black_cable
 Ns 96.078431

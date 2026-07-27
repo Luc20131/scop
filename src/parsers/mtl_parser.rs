@@ -1,4 +1,11 @@
-use std::{collections::HashMap, path::PathBuf, str::SplitWhitespace};
+use std::{
+    collections::HashMap,
+    ffi::{OsStr, OsString},
+    path::{Path, PathBuf},
+    str::SplitWhitespace,
+};
+
+use crate::graphics::texture::Texture;
 
 pub const ILLU_MODE_COLOR_ON_AND_AMBIENT_OFF: u8 = 0;
 pub const ILLU_MODE_COLOR_ON_AND_AMBIENT_ON: u8 = 1;
@@ -73,10 +80,11 @@ pub struct Material {
     tr: f32,
     tf: RGB,
     illum: usize,
-    map_kd: PathBuf,
-    map_ks: PathBuf,
-    map_d: PathBuf,
-    map_bump: PathBuf,
+    pub map_ka: Texture,
+    pub map_kd: Texture,
+    map_ks: Texture,
+    pub map_d: Texture,
+    pub map_bump: Texture,
 }
 
 impl Default for Material {
@@ -92,10 +100,11 @@ impl Default for Material {
             tr: 0.0,
             tf: RGB::default(),
             illum: 0,
-            map_kd: PathBuf::default(),
-            map_ks: PathBuf::default(),
-            map_d: PathBuf::default(),
-            map_bump: PathBuf::default(),
+            map_ka: Texture::default(),
+            map_kd: Texture::default(),
+            map_ks: Texture::default(),
+            map_d: Texture::default(),
+            map_bump: Texture::default(),
         }
     }
 }
@@ -111,6 +120,24 @@ impl Material {
 
     pub fn specular_color(&self) -> RGB {
         self.ks
+    }
+
+    pub fn init_map(&mut self) {
+        if self.map_ka.name != "Default" {
+            self.map_ka.setup_tex();
+        }
+        if self.map_kd.name != "Default" {
+            self.map_kd.setup_tex();
+        }
+        if self.map_ks.name != "Default" {
+            self.map_ks.setup_tex();
+        }
+        if self.map_d.name != "Default" {
+            self.map_d.setup_tex();
+        }
+        if self.map_bump.name != "Default" {
+            self.map_bump.setup_tex();
+        }
     }
 }
 
@@ -178,6 +205,74 @@ impl MtlFile {
                             .unwrap_or_default()
                             .parse::<usize>()
                             .unwrap_or(0)
+                    }
+                    "map_d" => {
+                        let oui = &words.next().unwrap_or_default();
+                        if let Some(parent_file) = self.path.parent() {
+                            let path = Path::new(oui);
+                            let relative: String = String::from(
+                                parent_file.to_str().unwrap_or_default().to_string().clone()
+                                    + "/"
+                                    + path
+                                        .file_name()
+                                        .unwrap_or_default()
+                                        .to_str()
+                                        .unwrap_or_default(),
+                            );
+                            mtl.map_d = Texture::new(Path::new(&relative));
+                            mtl.map_d.type_ = "alpha".to_string();
+                        }
+                    }
+                    "map_Kd" => {
+                        let oui = &words.next().unwrap_or_default();
+                        if let Some(parent_file) = self.path.parent() {
+                            let path = Path::new(oui);
+                            let relative: String = String::from(
+                                parent_file.to_str().unwrap_or_default().to_string().clone()
+                                    + "/"
+                                    + path
+                                        .file_name()
+                                        .unwrap_or_default()
+                                        .to_str()
+                                        .unwrap_or_default(),
+                            );
+                            mtl.map_kd = Texture::new(Path::new(&relative));
+                            mtl.map_kd.type_ = "diffuse".to_string();
+                        }
+                    }
+                    "map_Ka" => {
+                        let oui = &words.next().unwrap_or_default();
+                        if let Some(parent_file) = self.path.parent() {
+                            let path = Path::new(oui);
+                            let relative: String = String::from(
+                                parent_file.to_str().unwrap_or_default().to_string().clone()
+                                    + "/"
+                                    + path
+                                        .file_name()
+                                        .unwrap_or_default()
+                                        .to_str()
+                                        .unwrap_or_default(),
+                            );
+                            mtl.map_ka = Texture::new(Path::new(&relative));
+                            mtl.map_ka.type_ = "ambient".to_string();
+                        }
+                    }
+                    "map_Bump" => {
+                        let oui = &words.next().unwrap_or_default();
+                        if let Some(parent_file) = self.path.parent() {
+                            let path = Path::new(oui);
+                            let relative: String = String::from(
+                                parent_file.to_str().unwrap_or_default().to_string().clone()
+                                    + "/"
+                                    + path
+                                        .file_name()
+                                        .unwrap_or_default()
+                                        .to_str()
+                                        .unwrap_or_default(),
+                            );
+                            mtl.map_bump = Texture::new(Path::new(&relative));
+                            mtl.map_bump.type_ = "normal".to_string();
+                        }
                     }
                     _ => {}
                 }

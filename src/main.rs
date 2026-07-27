@@ -38,7 +38,11 @@ fn main() -> Result<(), String> {
             "./src/graphics/shaders_files/light_obj.frag",
         );
         let mut light = Light::new(shaders.clone());
-
+        light.change_light_color(RGB {
+            red: 0.7,
+            green: 0.7,
+            blue: 0.7,
+        });
         println!(
             "Obj vertex : {}\nMtl files nb: {}",
             obj.vertex.len(),
@@ -65,14 +69,17 @@ fn main() -> Result<(), String> {
             z: 50.0,
         });
 
-        let proj: Matrix4<f32> =
+        let mut proj: Matrix4<f32> =
             Matrix4::<f32>::perspective(PI / 2.0, 1920.0 / 1080.0, 0.1, 3000.0);
-        let mut tex = Texture::new(Path::new("resources/oui.bmp"));
-        tex.setup_tex();
+        // let mut tex = Texture::new(Path::new("resources/cathedral/base_diff.jpg"));
+        // tex.setup_tex();
         light_shader.use_prog();
         unsafe {
             gl::Enable(gl::DEPTH_TEST);
             gl::DepthFunc(gl::LESS);
+            gl::Enable(gl::BLEND);
+            // gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            gl::BlendFuncSeparate(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA, gl::ONE, gl::ZERO);
             // gl::Enable(gl::CULL_FACE);
             // gl::CullFace(gl::FRONT);
             // gl::FrontFace(gl::CW);
@@ -81,7 +88,14 @@ fn main() -> Result<(), String> {
         let mut last_frame = 0.0; // Time of last frame
         let mut _index: usize = 0;
         while !window.should_close() {
+            let (w_width, w_height) = window.get_size();
             unsafe {
+                proj = Matrix4::<f32>::perspective(
+                    PI / 2.0,
+                    w_width as f32 / w_height as f32,
+                    0.1,
+                    1000.0,
+                );
                 let current_frame: f32 = window.get_time() as f32;
                 delta_time = current_frame - last_frame;
                 last_frame = current_frame;
@@ -93,8 +107,9 @@ fn main() -> Result<(), String> {
 
                 let mut transform: Matrix4<f32> = Matrix4::identity();
                 transform.translate(0.0, 0.0, 0.0);
-                transform = transform.scale(scaling);
-                let light_transform = transform.clone();
+                let mut light_transform = transform.clone();
+                transform = transform.scale(0.1);
+                light_transform = light_transform.scale(scaling);
                 light_shader.use_prog();
                 light_shader.set_vec3("lightColor", light.color().rbg_to_array().as_slice());
                 light_shader.set_vec3("light.position", light.pos.as_array().as_slice());
@@ -123,6 +138,7 @@ fn main() -> Result<(), String> {
                 model.draw(&mut light_shader, camera.pos.clone());
 
                 shaders.use_prog();
+                transform.scale(0.001);
                 transform.translate(light.pos.x, light.pos.y, light.pos.z);
                 shaders.set_matrix4("view", camera.view.clone());
                 shaders.set_matrix4("transform", transform.clone());

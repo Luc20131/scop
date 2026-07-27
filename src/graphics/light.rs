@@ -12,21 +12,27 @@ pub struct Light {
     mesh: Mesh,
     pub pos: Vec3,
     shader: Shader,
+    directionnal: bool,
+    dir: Vec3,
 }
 
 impl Light {
     pub fn new(shader: Shader) -> Self {
         let mut res = Self {
             color: RGB::default(),
-            pos: Vec3::new(10.0, 10.0, 10.0),
+            pos: Vec3::new(100.0, 10.0, 100.0),
             mesh: Mesh::default(),
             shader,
+            directionnal: true,
+            dir: Vec3::new(0.0, -1.0, -1.0),
         };
 
-        res.mesh = ObjFile::new(Path::new("./resources/triangle.obj"))
-            .unwrap()
-            .model
-            .meshes[0]
+        res.mesh = ObjFile::new(Path::new(
+            "resources/edison-light-bulb/source/bolb/bolb.obj",
+        ))
+        .unwrap()
+        .model
+        .meshes[0]
             .clone();
         res.mesh.setup_mesh();
         res

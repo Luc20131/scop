@@ -259,6 +259,7 @@ impl ObjFile {
                 }
             }
             mesh.setup_mesh();
+            mesh.material.init_map();
         }
     }
 
@@ -274,7 +275,7 @@ impl ObjFile {
 
 fn data_to_tex_coord(data: &str) -> Option<TexCoord> {
     let mut splited_data = data.split_whitespace();
-    if splited_data.clone().count() != 2 {
+    if splited_data.clone().count() < 2 {
         return None;
     }
     let value = (

@@ -9,12 +9,15 @@ pub struct Texture {
     pub data: ImageBuffer<Rgba<u8>, Vec<u8>>,
     pub width: u32,
     pub height: u32,
-    pub _type: String,
+    pub type_: String,
 }
 
 impl Texture {
     pub fn new(path: &Path) -> Self {
-        let bmp = image::open(path).expect("crash").into_rgba8();
+        println!("Loading image: {}", path.display());
+        let bmp = image::open(path)
+            .expect(path.to_str().unwrap_or_default())
+            .into_rgba8();
         let mut id: u32 = 0;
         unsafe {
             gl::GenTextures(1, &mut id);
@@ -25,21 +28,14 @@ impl Texture {
             width: bmp.width(),
             height: bmp.height(),
             data: bmp,
-            _type: "".to_string(),
+            type_: "undefined".to_string(),
         }
     }
 
     pub fn setup_tex(&mut self) {
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as GLint);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as GLint);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR_MIPMAP_LINEAR as GLint,
-            );
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
+            println!("Setup texture {}: {}", self.id, self.name.display());
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
@@ -52,6 +48,28 @@ impl Texture {
                 self.data.as_bytes().as_ptr() as *const _,
             );
             gl::GenerateMipmap(gl::TEXTURE_2D);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as GLint);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as GLint);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR_MIPMAP_NEAREST as GLint,
+            );
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
+        }
+    }
+}
+
+impl Default for Texture {
+    fn default() -> Self {
+        let id: u32 = 0;
+        Self {
+            id,
+            name: OsString::from("Default"),
+            width: 1,
+            height: 1,
+            data: ImageBuffer::default(),
+            type_: "".to_string(),
         }
     }
 }

@@ -5,7 +5,7 @@ use gl::types::{GLfloat, GLsizei};
 
 use crate::graphics::gl_wrapper::{BufferObject, Vao, VertexAttribute};
 use crate::graphics::shaders::Shader;
-use crate::graphics::texture::Texture;
+use crate::graphics::texture::{self, Texture};
 use crate::math::vec3::Vec3;
 use crate::parsers::mtl_parser::Material;
 
@@ -124,14 +124,8 @@ impl Mesh {
         shader.use_prog();
         self.vao.bind();
         self.vbo.bind();
-        // shader.set_vec3(
-        //     "objectColor",
-        //     &self.material.ambient_color().rbg_to_array().as_slice(),
-        // );
-        // lightingShader.setFloat("light.constant",  1.0f);
-        shader.set_float("light.linear", 0.022);
-        shader.set_float("light.quadratic", 0.0019);
-
+        shader.set_float("light.linear", 0.007);
+        shader.set_float("light.quadratic", 0.000007);
         shader.set_float("light.ambientStrength", self.material.ambient_color().red);
         shader.set_float("light.specularStrength", self.material.specular_color().red);
         shader.set_vec3("viewPos", &cam_pos.as_array());
@@ -139,11 +133,41 @@ impl Mesh {
         unsafe {
             if toggle_texture_mode(false) {
                 shader.set_int("aTexMode", 1);
-                for (tex_counter, texture) in (0_i32..).zip(self.textures.iter()) {
-                    gl::ActiveTexture(TEXTURE0 + (tex_counter as u32));
-                    shader.set_int("ourTexture", tex_counter);
-                    gl::BindTexture(gl::TEXTURE_2D, texture.id);
+
+                // for (tex_counter, texture) in (0_i32..).zip(self.textures.iter()) {
+
+                // match texture.type_.as_str() {
+                //     "ambient" => {
+                if self.material.map_kd.id != 0 {
+                    let tex_id: u32 = gl::TEXTURE0 + self.material.map_kd.id;
+                    gl::ActiveTexture(tex_id);
+                    gl::BindTexture(gl::TEXTURE_2D, self.material.map_kd.id);
+                    shader.set_int("diffuseTexture", self.material.map_kd.id as i32);
                 }
+                if self.material.map_d.id != 0 {
+                    let tex_id: u32 = gl::TEXTURE0 + self.material.map_d.id;
+                    gl::ActiveTexture(tex_id);
+                    gl::BindTexture(gl::TEXTURE_2D, self.material.map_d.id);
+                    shader.set_int("has_alpha_tex", 1);
+                    shader.set_int("alphaTexture", self.material.map_d.id as i32);
+                } else {
+                    shader.set_int("has_alpha_tex", 0);
+                }
+                if self.material.map_bump.id != 0 {
+                    let tex_id: u32 = gl::TEXTURE0 + self.material.map_bump.id;
+                    gl::ActiveTexture(tex_id);
+                    gl::BindTexture(gl::TEXTURE_2D, self.material.map_bump.id);
+                    shader.set_int("has_normal_tex", 1);
+                    shader.set_int("normalTexture", self.material.map_bump.id as i32);
+                } else {
+                    shader.set_int("has_normal_tex", 0);
+                }
+
+                // "alpha" => {
+                // shader.set_int("alphaTexture", tex_counter);
+                // }
+                // _ => {}
+                // }
             } else {
                 shader.set_int("aTexMode", 0);
             }

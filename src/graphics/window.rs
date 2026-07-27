@@ -240,6 +240,10 @@ impl Window {
         last_time
     }
 
+    pub fn get_size(&self) -> (i32, i32) {
+        self.window_handle.get_size()
+    }
+
     // fn create_cursor(&mut self) {
     // unsafe {
     // let cursor: Cursor = Cursor {
