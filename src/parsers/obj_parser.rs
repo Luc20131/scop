@@ -155,11 +155,20 @@ impl ObjFile {
                 self.parse_mtl_file(line);
             }
             "o" => {
-                self.model.meshes.push(Mesh::default());
+                if self.model.meshes.is_empty() {
+                    self.model.meshes.push(Mesh::default());
+                } else if !self.model.meshes.last().unwrap().faces.is_empty() {
+                    self.model.meshes.push(Mesh::default());
+                }
                 println!("obj name: {}", data);
                 self.model.meshes.last_mut().unwrap().name = data.to_string();
             }
             "g" => {
+                if self.model.meshes.is_empty() {
+                    self.model.meshes.push(Mesh::default());
+                } else if !self.model.meshes.last().unwrap().faces.is_empty() {
+                    self.model.meshes.push(Mesh::default());
+                }
                 self.model.meshes.push(Mesh::default());
                 println!("group name: {}", data);
                 self.model.meshes.last_mut().unwrap().name = data.to_string();
@@ -180,6 +189,8 @@ impl ObjFile {
             "s" => {}
             "usemtl" => {
                 if self.model.meshes.is_empty() {
+                    self.model.meshes.push(Mesh::default());
+                } else if !self.model.meshes.last().unwrap().faces.is_empty() {
                     self.model.meshes.push(Mesh::default());
                 }
                 let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();

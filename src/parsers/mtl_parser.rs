@@ -1,6 +1,5 @@
 use std::{
     collections::HashMap,
-    ffi::{OsStr, OsString},
     path::{Path, PathBuf},
     str::SplitWhitespace,
 };
@@ -76,7 +75,7 @@ pub struct Material {
     pub ks: RGB,
     ns: f32,
     ni: f32,
-    d: f32,
+    pub d: f32,
     tr: f32,
     tf: RGB,
     illum: usize,
@@ -85,6 +84,8 @@ pub struct Material {
     map_ks: Texture,
     pub map_d: Texture,
     pub map_bump: Texture,
+    map_pr: Texture,
+    map_pm: Texture,
 }
 
 impl Default for Material {
@@ -105,6 +106,8 @@ impl Default for Material {
             map_ks: Texture::default(),
             map_d: Texture::default(),
             map_bump: Texture::default(),
+            map_pr: Texture::default(),
+            map_pm: Texture::default(),
         }
     }
 }

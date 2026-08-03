@@ -34,6 +34,12 @@ in vec3 FragPos;
 float distance = length(light.position - FragPos);
 float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
+struct Material {
+    float d;
+};
+
+uniform Material material;
+
 void main()
 {
     vec3 ambient = light.ambientStrength * lightColor;
@@ -71,7 +77,7 @@ void main()
                 discard;
         }
         else {
-            alpha_tex.r = 1.0;
+            alpha_tex.r = material.d;
         }
         color_tex.a = alpha_tex.r;
         FragColor = color_tex * vec4(result, 1.0);

@@ -1,12 +1,13 @@
 use gl::types::GLint;
-use image::{EncodableLayout, ImageBuffer, Rgba};
-use std::{ffi::OsString, path::Path};
+use std::{ffi::OsString, path::Path, vec};
+
+use crate::parsers::bmp_parser::{Pixel, image_loader};
 
 #[derive(Debug, Clone)]
 pub struct Texture {
     pub id: u32,
     pub name: OsString,
-    pub data: ImageBuffer<Rgba<u8>, Vec<u8>>,
+    pub data: Vec<Pixel>,
     pub width: u32,
     pub height: u32,
     pub type_: String,
@@ -15,20 +16,36 @@ pub struct Texture {
 impl Texture {
     pub fn new(path: &Path) -> Self {
         println!("Loading image: {}", path.display());
-        let bmp = image::open(path)
-            .expect(path.to_str().unwrap_or_default())
-            .into_rgba8();
-        let mut id: u32 = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-        }
-        Self {
-            id,
-            name: path.file_name().unwrap_or_default().to_os_string(),
-            width: bmp.width(),
-            height: bmp.height(),
-            data: bmp,
-            type_: "undefined".to_string(),
+        // let bmp = image::open(path)
+        //     .expect(path.to_str().unwrap_or_default())
+        //     .into_rgba8();
+        let bmp = image_loader(path);
+        match bmp {
+            Ok(mut img) => {
+                let mut id: u32 = 0;
+                unsafe {
+                    gl::GenTextures(1, &mut id);
+                }
+                println!(
+                    " file : {}\rbmp width: {}\r bmp height: {}",
+                    path.display(),
+                    img.width(),
+                    img.height()
+                );
+                return Self {
+                    id,
+                    name: path.file_name().unwrap_or_default().to_os_string(),
+                    width: img.width(),
+                    height: img.height(),
+                    data: img.img_pixels,
+                    type_: "undefined".to_string(),
+                };
+            }
+            Err(error) => {
+                dbg!(error);
+                println!("Error texture");
+                return Self::default();
+            }
         }
     }
 
@@ -43,9 +60,9 @@ impl Texture {
                 self.width as i32,
                 self.height as i32,
                 0,
-                gl::RGBA,
+                gl::BGRA,
                 gl::UNSIGNED_BYTE,
-                self.data.as_bytes().as_ptr() as *const _,
+                self.data.as_ptr() as *const _,
             );
             gl::GenerateMipmap(gl::TEXTURE_2D);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as GLint);
@@ -68,7 +85,7 @@ impl Default for Texture {
             name: OsString::from("Default"),
             width: 1,
             height: 1,
-            data: ImageBuffer::default(),
+            data: vec![],
             type_: "".to_string(),
         }
     }

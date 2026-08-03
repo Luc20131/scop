@@ -1,7 +1,6 @@
 use scop::graphics::camera::Camera;
 use scop::graphics::light::Light;
 use scop::graphics::shaders::Shader;
-use scop::graphics::texture::Texture;
 use scop::graphics::window::Window;
 use scop::math::matrix::Matrix4;
 use scop::math::vec3::Vec3;
@@ -61,7 +60,7 @@ fn main() -> Result<(), String> {
         // }
 
         let mut time = window.get_time();
-        let scaling: f32 = 1.0;
+        let scaling: f32 = 0.1;
         let mut camera: Camera = Camera::new();
         camera.set_pos(Vec3 {
             x: 0.0,
@@ -69,8 +68,7 @@ fn main() -> Result<(), String> {
             z: 50.0,
         });
 
-        let mut proj: Matrix4<f32> =
-            Matrix4::<f32>::perspective(PI / 2.0, 1920.0 / 1080.0, 0.1, 3000.0);
+        let mut proj: Matrix4<f32>;
         // let mut tex = Texture::new(Path::new("resources/cathedral/base_diff.jpg"));
         // tex.setup_tex();
         light_shader.use_prog();

@@ -1,11 +1,10 @@
 use std::{mem, ptr};
 
-use gl::TEXTURE0;
 use gl::types::{GLfloat, GLsizei};
 
 use crate::graphics::gl_wrapper::{BufferObject, Vao, VertexAttribute};
 use crate::graphics::shaders::Shader;
-use crate::graphics::texture::{self, Texture};
+use crate::graphics::texture::Texture;
 use crate::math::vec3::Vec3;
 use crate::parsers::mtl_parser::Material;
 
@@ -128,6 +127,7 @@ impl Mesh {
         shader.set_float("light.quadratic", 0.000007);
         shader.set_float("light.ambientStrength", self.material.ambient_color().red);
         shader.set_float("light.specularStrength", self.material.specular_color().red);
+        shader.set_float("material.d", self.material.d);
         shader.set_vec3("viewPos", &cam_pos.as_array());
 
         unsafe {
