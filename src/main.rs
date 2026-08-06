@@ -141,7 +141,7 @@ fn main() -> Result<(), String> {
                 shaders.set_matrix4("view", camera.view.clone());
                 shaders.set_matrix4("transform", transform.clone());
                 shaders.set_matrix4("projection", proj.clone());
-                light.draw(camera.pos.clone());
+                // light.draw(camera.pos.clone());
 
                 time = window.update_title(time);
             }

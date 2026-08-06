@@ -4,8 +4,6 @@ use std::{
     path::Path,
 };
 
-use gl::PACK_IMAGE_HEIGHT;
-
 #[derive(Debug)]
 pub enum BmpError {
     Io(Error),
@@ -46,21 +44,21 @@ struct DibHeader {
 }
 
 #[derive(Debug, Clone)]
-pub struct RGBA {
-    red: u8,
-    green: u8,
+pub struct BGRA {
     blue: u8,
+    green: u8,
+    red: u8,
     alpha: u8,
 }
 
-pub type Pixel = RGBA;
+pub type Pixel = BGRA;
 
 impl Default for Pixel {
     fn default() -> Self {
         Self {
-            red: 0,
-            green: 0,
             blue: 0,
+            green: 0,
+            red: 0,
             alpha: 0,
         }
     }
@@ -73,6 +71,7 @@ pub struct BmpImage {
     header: BmpHeader,
     dib_header: DibHeader,
     pub img_pixels: Vec<Pixel>,
+    color_list: Vec<Pixel>,
 }
 
 impl BmpImage {
@@ -96,16 +95,12 @@ pub fn image_loader(path: &Path) -> Result<BmpImage, BmpError> {
     println!("Parse dib header, data_offset: {}", header.data_offset);
 
     let dib_header: DibHeader = parse_dib(&file)?;
-    if dib_header.bits_per_pixel != 24 {
+    if dib_header.bits_per_pixel < 24 {
         return Err(BmpError::UnsupportedBpp(dib_header.bits_per_pixel));
     }
     // let img = read(path.to_str().unwrap_or_default()).expect("Failed to open image");
     // let img_name = path.file_name().unwrap_or_default();
-    println!(
-        "Parse pixels \n\theight : {}\n\twidth : {}",
-        dib_header.height, dib_header.width
-    );
-
+    dbg!(&dib_header);
     let img_pixels: Vec<Pixel> = parse_pixel(&file, header.data_offset, &dib_header)?;
     let image = BmpImage {
         name: path
@@ -117,6 +112,7 @@ pub fn image_loader(path: &Path) -> Result<BmpImage, BmpError> {
         header,
         dib_header,
         img_pixels,
+        color_list: vec![],
     };
     Ok(image)
     // dbg!(img_data.name);
@@ -171,21 +167,27 @@ fn parse_pixel(
 ) -> Result<Vec<Pixel>, BmpError> {
     file.seek(SeekFrom::Start(offset as u64))?;
     let width = dib_header.width;
-    let height = dib_header.height;
-    let byte_per_px: usize = dib_header.bits_per_pixel as usize / 8;
-    let row_size: usize = width as usize * byte_per_px + 4;
+    let height: i32 = (dib_header.height as i32).abs();
+    let bytes_per_px: usize = dib_header.bits_per_pixel as usize / 8;
+    let row_size: usize = (width as usize * dib_header.bits_per_pixel as usize + 31) / 32 * 4;
 
-    dbg!(row_size);
+    let is_mirrored = dib_header.height > 0;
+
     let mut row_buf = vec![0u8; row_size];
     let mut pixels: Vec<Pixel> = vec![Pixel::default(); (width as usize) * (height as usize)];
-    dbg!(pixels.len());
     for row in 0..height as usize {
-        dbg!(row);
         file.read_exact(&mut row_buf)?;
+        let dst_row = if is_mirrored {
+            height as usize - 1 - row
+        } else {
+            row
+        };
+
+        // dbg!(&row_buf[0..(bytes_per_px as usize)]);
         for col in 0..width as usize {
-            let px_offset: usize = col * byte_per_px;
+            let px_offset: usize = (col * bytes_per_px);
             let alpha;
-            if byte_per_px <= 3 {
+            if bytes_per_px <= 3 {
                 alpha = 255;
             } else {
                 alpha = row_buf[px_offset + 3];
@@ -196,7 +198,7 @@ fn parse_pixel(
                 red: row_buf[px_offset + 2],
                 alpha: alpha,
             };
-            pixels[row * (width as usize) + col] = px;
+            pixels[dst_row * (width as usize) + col] = px;
         }
     }
     Ok(pixels)

@@ -11,6 +11,7 @@ pub struct Texture {
     pub width: u32,
     pub height: u32,
     pub type_: String,
+    is_set: bool,
 }
 
 impl Texture {
@@ -27,7 +28,7 @@ impl Texture {
                     gl::GenTextures(1, &mut id);
                 }
                 println!(
-                    " file : {}\rbmp width: {}\r bmp height: {}",
+                    " file : {}\nbmp width: {}\n bmp height: {}",
                     path.display(),
                     img.width(),
                     img.height()
@@ -39,6 +40,7 @@ impl Texture {
                     height: img.height(),
                     data: img.img_pixels,
                     type_: "undefined".to_string(),
+                    is_set: false,
                 };
             }
             Err(error) => {
@@ -50,9 +52,13 @@ impl Texture {
     }
 
     pub fn setup_tex(&mut self) {
+        if self.is_set {
+            return;
+        }
+        println!("Setup texture {}: {}", self.id, self.name.display());
+        self.is_set = true;
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);
-            println!("Setup texture {}: {}", self.id, self.name.display());
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
@@ -62,7 +68,7 @@ impl Texture {
                 0,
                 gl::BGRA,
                 gl::UNSIGNED_BYTE,
-                self.data.as_ptr() as *const _,
+                self.data.as_slice().as_ptr() as *const _,
             );
             gl::GenerateMipmap(gl::TEXTURE_2D);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as GLint);
@@ -87,6 +93,7 @@ impl Default for Texture {
             height: 1,
             data: vec![],
             type_: "".to_string(),
+            is_set: false,
         }
     }
 }
