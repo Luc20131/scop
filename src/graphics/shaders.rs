@@ -101,7 +101,6 @@ fn compile_shader(shader_code: String, _type: GLenum) -> Result<GLuint, String> 
     unsafe {
         gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
     }
-
     if success == gl::TRUE as GLint {
         return Ok(shader);
     }

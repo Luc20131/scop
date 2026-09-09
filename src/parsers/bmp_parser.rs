@@ -4,12 +4,15 @@ use std::{
     path::Path,
 };
 
+use gl::TEXTURE_ALPHA_TYPE;
+
 #[derive(Debug)]
 pub enum BmpError {
     Io(Error),
     InvalidSignature([u8; 2]),
     UnsupportedDibHeaderSize(u32),
     UnsupportedBpp(u16),
+    InvalidColorIndex(),
 }
 
 impl From<Error> for BmpError {
@@ -32,7 +35,7 @@ struct BmpHeader {
 struct DibHeader {
     dib_head_size: u32,
     pub width: u32,
-    pub height: u32,
+    pub height: i32,
     plane: u16,
     bits_per_pixel: u16,
     compression: u32,
@@ -43,7 +46,8 @@ struct DibHeader {
     important_color_count: u32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
+#[allow(unused)]
 pub struct BGRA {
     blue: u8,
     green: u8,
@@ -71,7 +75,6 @@ pub struct BmpImage {
     header: BmpHeader,
     dib_header: DibHeader,
     pub img_pixels: Vec<Pixel>,
-    color_list: Vec<Pixel>,
 }
 
 impl BmpImage {
@@ -79,29 +82,33 @@ impl BmpImage {
         self.dib_header.width
     }
 
-    pub fn height(&mut self) -> u32 {
+    pub fn height(&mut self) -> i32 {
         self.dib_header.height
     }
 }
 
-pub fn image_loader(path: &Path) -> Result<BmpImage, BmpError> {
+pub fn image_loader(path: &Path, flag: u32) -> Result<BmpImage, BmpError> {
     if !path.exists() {
         eprintln!("Error: {} not found", path.to_str().unwrap_or_default());
     }
     println!("Loading {}", path.display());
     let file = File::open(path)?;
-    println!("Parse header");
     let header = parse_header(&file)?;
-    println!("Parse dib header, data_offset: {}", header.data_offset);
 
     let dib_header: DibHeader = parse_dib(&file)?;
-    if dib_header.bits_per_pixel < 24 {
-        return Err(BmpError::UnsupportedBpp(dib_header.bits_per_pixel));
+    let mut colors_list: Vec<Pixel> = vec![];
+    let mut img_pixels: Vec<BGRA> = vec![];
+    if dib_header.bits_per_pixel < 16 {
+        if dib_header.colors_in_color_table != 0 {
+            colors_list = parse_color_table(&file, &dib_header, flag)?;
+        }
+        img_pixels =
+            parse_px_from_color_table(&file, colors_list, &dib_header, header.data_offset, flag)?;
+    } else {
+        // let img = read(path.to_str().unwrap_or_default()).expect("Failed to open image");
+        // let img_name = path.file_name().unwrap_or_default();
+        img_pixels = parse_pixel(&file, header.data_offset, &dib_header)?;
     }
-    // let img = read(path.to_str().unwrap_or_default()).expect("Failed to open image");
-    // let img_name = path.file_name().unwrap_or_default();
-    dbg!(&dib_header);
-    let img_pixels: Vec<Pixel> = parse_pixel(&file, header.data_offset, &dib_header)?;
     let image = BmpImage {
         name: path
             .file_name()
@@ -112,8 +119,8 @@ pub fn image_loader(path: &Path) -> Result<BmpImage, BmpError> {
         header,
         dib_header,
         img_pixels,
-        color_list: vec![],
     };
+
     Ok(image)
     // dbg!(img_data.name);
 }
@@ -121,7 +128,6 @@ pub fn image_loader(path: &Path) -> Result<BmpImage, BmpError> {
 fn parse_header(mut file: &File) -> Result<BmpHeader, BmpError> {
     let mut buffer = [0u8; 14];
     file.read_exact(&mut buffer)?;
-    dbg!(buffer);
     let signature = [buffer[0], buffer[1]];
     if signature != [b'B', b'M'] {
         return Err(BmpError::InvalidSignature(signature));
@@ -147,7 +153,7 @@ fn parse_dib(mut file: &File) -> Result<DibHeader, BmpError> {
     let dib = DibHeader {
         dib_head_size: dib_header_size,
         width: u32::from_le_bytes(buffer[4..8].try_into().unwrap()),
-        height: u32::from_le_bytes(buffer[8..12].try_into().unwrap()),
+        height: i32::from_le_bytes(buffer[8..12].try_into().unwrap()),
         plane: u16::from_le_bytes(buffer[12..14].try_into().unwrap()),
         bits_per_pixel: u16::from_le_bytes(buffer[14..16].try_into().unwrap()),
         compression: u32::from_le_bytes(buffer[16..20].try_into().unwrap()),
@@ -182,10 +188,8 @@ fn parse_pixel(
         } else {
             row
         };
-
-        // dbg!(&row_buf[0..(bytes_per_px as usize)]);
         for col in 0..width as usize {
-            let px_offset: usize = (col * bytes_per_px);
+            let px_offset: usize = col * bytes_per_px;
             let alpha;
             if bytes_per_px <= 3 {
                 alpha = 255;
@@ -204,4 +208,76 @@ fn parse_pixel(
     Ok(pixels)
 }
 
-// img_pixels: content[(file_offset as usize)..((file_offset + img_size) as usize)].to_vec(),
+fn parse_color_table(
+    mut file: &File,
+    dib_header: &DibHeader,
+    flag: u32,
+) -> Result<Vec<BGRA>, BmpError> {
+    let mut buf: Vec<u8> = vec![0u8; (dib_header.colors_in_color_table * 4) as usize];
+    file.seek(SeekFrom::Start(14u64 + dib_header.dib_head_size as u64))?;
+    file.read_exact(&mut buf)?;
+    let mut color_table: Vec<BGRA> = vec![];
+
+    for index in 0..((dib_header.colors_in_color_table) as usize) {
+        let mut color = u32_to_bgra(u32::from_le_bytes(
+            buf[index * 4..(index * 4 + 4)].try_into().unwrap(),
+        ));
+        if flag == TEXTURE_ALPHA_TYPE {
+            color.alpha = color.red;
+        }
+        color_table.push(color);
+    }
+    Ok(color_table)
+}
+
+fn parse_px_from_color_table(
+    mut file: &File,
+    color_table: Vec<BGRA>,
+    dib_header: &DibHeader,
+    offset: u32,
+    flag: u32,
+) -> Result<Vec<BGRA>, BmpError> {
+    file.seek(SeekFrom::Start(offset as u64))?;
+    let width = dib_header.width;
+    let height: i32 = (dib_header.height as i32).abs();
+    let row_size: usize = (width as usize * dib_header.bits_per_pixel as usize + 31) / 32 * 4;
+    dbg!(row_size);
+    let is_mirrored = dib_header.height > 0;
+
+    let mut row_buf = vec![0u8; row_size];
+    let mut pixels: Vec<BGRA> = vec![BGRA::default(); (width as usize) * (height as usize)];
+
+    for row in 0..height as usize {
+        file.read_exact(&mut row_buf)?;
+        let dst_row = if is_mirrored {
+            height as usize - 1 - row
+        } else {
+            row
+        };
+
+        for col in 0..width as usize {
+            let color_index: usize = (row_buf[col]) as usize;
+            let pixel_index = dst_row * (width as usize) + col;
+            pixels[pixel_index] = color_table
+                .get(color_index)
+                .ok_or(BmpError::InvalidColorIndex())?
+                .clone();
+            if flag == TEXTURE_ALPHA_TYPE {
+                pixels[pixel_index].alpha = pixels[pixel_index].red;
+            }
+        }
+    }
+
+    Ok(pixels)
+}
+
+fn u32_to_bgra(value: u32) -> BGRA {
+    let oui = value.to_le_bytes();
+    let mut color: BGRA = BGRA::default();
+
+    color.blue = oui[0];
+    color.green = oui[1];
+    color.red = oui[0];
+    color.alpha = 255 as u8;
+    color
+}

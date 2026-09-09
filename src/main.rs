@@ -49,16 +49,6 @@ fn main() -> Result<(), String> {
         );
 
         let mut model = obj.model;
-        // for msh in &model.meshes {
-        //     println!(
-        //         "Mesh: {}\n\tnb vertice: {}\n\tnb indices: {}\n\tmaterial: {}",
-        //         msh.name,
-        //         msh.vertices.len(),
-        //         msh.indices.len(),
-        //         msh.material.name
-        //     );
-        // }
-
         let mut time = window.get_time();
         let scaling: f32 = 0.1;
         let mut camera: Camera = Camera::new();

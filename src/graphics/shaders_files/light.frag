@@ -73,13 +73,13 @@ void main()
         vec4 alpha_tex;
         if (has_alpha_tex == 1) {
             alpha_tex = texture(alphaTexture, TexCoord);
-            if (alpha_tex.r < 0.1)
+            if (alpha_tex.a < 0.05)
                 discard;
         }
         else {
-            alpha_tex.r = material.d;
+            alpha_tex.a = material.d;
         }
-        color_tex.a = alpha_tex.r;
+        color_tex.a = alpha_tex.a;
         FragColor = color_tex * vec4(result, 1.0);
     }
     else

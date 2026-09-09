@@ -9,30 +9,21 @@ pub struct Texture {
     pub name: OsString,
     pub data: Vec<Pixel>,
     pub width: u32,
-    pub height: u32,
+    pub height: i32,
     pub type_: String,
     is_set: bool,
 }
 
 impl Texture {
-    pub fn new(path: &Path) -> Self {
+    pub fn new(path: &Path, flag: u32) -> Self {
         println!("Loading image: {}", path.display());
-        // let bmp = image::open(path)
-        //     .expect(path.to_str().unwrap_or_default())
-        //     .into_rgba8();
-        let bmp = image_loader(path);
+        let bmp = image_loader(path, flag);
         match bmp {
             Ok(mut img) => {
                 let mut id: u32 = 0;
                 unsafe {
                     gl::GenTextures(1, &mut id);
                 }
-                println!(
-                    " file : {}\nbmp width: {}\n bmp height: {}",
-                    path.display(),
-                    img.width(),
-                    img.height()
-                );
                 return Self {
                     id,
                     name: path.file_name().unwrap_or_default().to_os_string(),

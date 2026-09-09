@@ -4,6 +4,8 @@ use std::{
     str::SplitWhitespace,
 };
 
+use gl::TEXTURE_ALPHA_TYPE;
+
 use crate::graphics::texture::Texture;
 
 pub const ILLU_MODE_COLOR_ON_AND_AMBIENT_OFF: u8 = 0;
@@ -222,7 +224,7 @@ impl MtlFile {
                                         .to_str()
                                         .unwrap_or_default(),
                             );
-                            mtl.map_d = Texture::new(Path::new(&relative));
+                            mtl.map_d = Texture::new(Path::new(&relative), TEXTURE_ALPHA_TYPE);
                             mtl.map_d.type_ = "alpha".to_string();
                         }
                     }
@@ -239,7 +241,7 @@ impl MtlFile {
                                         .to_str()
                                         .unwrap_or_default(),
                             );
-                            mtl.map_kd = Texture::new(Path::new(&relative));
+                            mtl.map_kd = Texture::new(Path::new(&relative), 0);
                             mtl.map_kd.type_ = "diffuse".to_string();
                         }
                     }
@@ -256,7 +258,7 @@ impl MtlFile {
                                         .to_str()
                                         .unwrap_or_default(),
                             );
-                            mtl.map_ka = Texture::new(Path::new(&relative));
+                            mtl.map_ka = Texture::new(Path::new(&relative), 0);
                             mtl.map_ka.type_ = "ambient".to_string();
                         }
                     }
@@ -273,7 +275,7 @@ impl MtlFile {
                                         .to_str()
                                         .unwrap_or_default(),
                             );
-                            mtl.map_bump = Texture::new(Path::new(&relative));
+                            mtl.map_bump = Texture::new(Path::new(&relative), 0);
                             mtl.map_bump.type_ = "normal".to_string();
                         }
                     }
