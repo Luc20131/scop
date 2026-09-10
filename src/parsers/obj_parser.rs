@@ -117,7 +117,7 @@ impl ObjFile {
             }
             self.mtl_files.push(mtl_file);
         } else {
-            println!("Failed to read {}", path.display());
+            eprintln!("Failed to read {}", path.display());
         }
     }
 
@@ -275,12 +275,29 @@ impl ObjFile {
     }
 
     pub fn get_middle_offset(&self) -> Vec3 {
-        let offset: Vec3 = Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        };
-        offset
+        let mut max = Vec3::new(0.0, 0.0, 0.0);
+        let mut min = Vec3::new(0.0, 0.0, 0.0);
+        for vertex in &self.vertex {
+            if vertex.x > max.x {
+                max.x = vertex.x
+            }
+            if vertex.y > max.y {
+                max.y = vertex.y
+            }
+            if vertex.z > max.z {
+                max.z = vertex.z
+            }
+            if vertex.x < min.x {
+                min.x = vertex.x
+            }
+            if vertex.y < min.y {
+                min.y = vertex.y
+            }
+            if vertex.z < min.z {
+                min.z = vertex.z
+            }
+        }
+        (max - min).scalar(0.5)
     }
 }
 

@@ -48,93 +48,90 @@ fn main() -> Result<(), String> {
             obj.mtl_files.len()
         );
 
+        let mut pos_offset = obj.get_middle_offset();
+        dbg!(&pos_offset);
         let mut model = obj.model;
         let mut time = window.get_time();
+
         let scaling: f32 = 0.1;
+
         let mut camera: Camera = Camera::new();
         camera.set_pos(Vec3 {
             x: 0.0,
-            y: 10.0,
-            z: 50.0,
+            y: 0.0,
+            z: pos_offset.z * scaling,
         });
 
         let mut proj: Matrix4<f32>;
-        // let mut tex = Texture::new(Path::new("resources/cathedral/base_diff.jpg"));
-        // tex.setup_tex();
         light_shader.use_prog();
         unsafe {
             gl::Enable(gl::DEPTH_TEST);
             gl::DepthFunc(gl::LESS);
             gl::Enable(gl::BLEND);
-            // gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
             gl::BlendFuncSeparate(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA, gl::ONE, gl::ZERO);
-            // gl::Enable(gl::CULL_FACE);
-            // gl::CullFace(gl::FRONT);
-            // gl::FrontFace(gl::CW);
         }
-        let mut delta_time; // Time between current frame and last frame
-        let mut last_frame = 0.0; // Time of last frame
+        let mut delta_time;
+        let mut last_frame = 0.0;
         let mut _index: usize = 0;
+
         while !window.should_close() {
             let (w_width, w_height) = window.get_size();
-            unsafe {
-                proj = Matrix4::<f32>::perspective(
-                    PI / 2.0,
-                    w_width as f32 / w_height as f32,
-                    0.1,
-                    1000.0,
-                );
-                let current_frame: f32 = window.get_time() as f32;
-                delta_time = current_frame - last_frame;
-                last_frame = current_frame;
+            proj = Matrix4::<f32>::perspective(
+                w_width as f32 / w_height as f32,
+                PI / 2.0,
+                0.1,
+                1000.0,
+            );
+            let current_frame: f32 = window.get_time() as f32;
+            delta_time = current_frame - last_frame;
+            last_frame = current_frame;
 
-                input_checker(&window, &mut camera, &mut light, delta_time);
-                camera.update_camera_pos();
+            input_checker(&window, &mut camera, &mut light, delta_time);
+            camera.update_camera_pos();
+            unsafe {
                 gl::ClearColor(0.0, 0.0, 0.0, 1.0);
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-
-                let mut transform: Matrix4<f32> = Matrix4::identity();
-                transform.translate(0.0, 0.0, 0.0);
-                let mut light_transform = transform.clone();
-                transform = transform.scale(0.1);
-                light_transform = light_transform.scale(scaling);
-                light_shader.use_prog();
-                light_shader.set_vec3("lightColor", light.color().rbg_to_array().as_slice());
-                light_shader.set_vec3("light.position", light.pos.as_array().as_slice());
-                light_shader.set_matrix4("projection", proj.clone());
-                light_shader.set_matrix4("view", camera.view.clone());
-                light_shader.set_matrix4("transform", light_transform.clone());
-
-                if *(window.keys_state.get(&Key::V).unwrap()) {
-                    model.render_type = gl::POINT;
-                }
-                if *(window.keys_state.get(&Key::B).unwrap()) {
-                    model.render_type = gl::LINE;
-                }
-                if *(window.keys_state.get(&Key::N).unwrap()) {
-                    model.render_type = gl::FILL;
-                }
-                if *(window.keys_state.get(&Key::KpAdd).unwrap()) {
-                    window.keys_state.entry(Key::KpAdd).insert_entry(false);
-                    _index += 1;
-                }
-                if *(window.keys_state.get(&Key::KpSubtract).unwrap()) {
-                    window.keys_state.entry(Key::KpSubtract).insert_entry(false);
-                    _index -= 1;
-                }
-                // light.draw();
-                model.draw(&mut light_shader, camera.pos.clone());
-
-                shaders.use_prog();
-                transform.scale(0.001);
-                transform.translate(light.pos.x, light.pos.y, light.pos.z);
-                shaders.set_matrix4("view", camera.view.clone());
-                shaders.set_matrix4("transform", transform.clone());
-                shaders.set_matrix4("projection", proj.clone());
-                // light.draw(camera.pos.clone());
-
-                time = window.update_title(time);
             }
+            let mut transform: Matrix4<f32> = Matrix4::identity();
+            transform.translate(pos_offset.x, pos_offset.y, pos_offset.z);
+            transform = transform.scale(scaling);
+
+            let light_transform = transform.clone();
+            light_shader.use_prog();
+            light_shader.set_vec3("lightColor", light.color().rbg_to_array().as_slice());
+            light_shader.set_vec3("light.position", light.pos.as_array().as_slice());
+            light_shader.set_matrix4("projection", proj.clone());
+            light_shader.set_matrix4("view", camera.view.clone());
+            light_shader.set_matrix4("transform", light_transform.clone());
+
+            if *(window.keys_state.get(&Key::V).unwrap()) {
+                model.render_type = gl::POINT;
+            }
+            if *(window.keys_state.get(&Key::B).unwrap()) {
+                model.render_type = gl::LINE;
+            }
+            if *(window.keys_state.get(&Key::N).unwrap()) {
+                model.render_type = gl::FILL;
+            }
+            if *(window.keys_state.get(&Key::KpAdd).unwrap()) {
+                window.keys_state.entry(Key::KpAdd).insert_entry(false);
+                _index += 1;
+            }
+            if *(window.keys_state.get(&Key::KpSubtract).unwrap()) {
+                window.keys_state.entry(Key::KpSubtract).insert_entry(false);
+                _index -= 1;
+            }
+            // light.draw();
+            model.draw(&mut light_shader, camera.pos.clone());
+
+            shaders.use_prog();
+            transform.scale(0.001);
+            transform.translate(light.pos.x, light.pos.y, light.pos.z);
+            shaders.set_matrix4("view", camera.view.clone());
+            shaders.set_matrix4("transform", transform.clone());
+            shaders.set_matrix4("projection", proj.clone());
+
+            time = window.update_title(time);
             window.update();
         }
     }

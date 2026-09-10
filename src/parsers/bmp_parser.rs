@@ -101,7 +101,6 @@ pub fn image_loader(path: &Path, flag: u32) -> Result<BmpImage, BmpError> {
     let header = parse_header(&file)?;
 
     let dib_header: DibHeader = parse_dib(&file)?;
-    dbg!(&dib_header);
     let mut colors_list: Vec<Pixel> = vec![];
     let mut img_pixels: Vec<BGRA> = vec![];
     if dib_header.bits_per_pixel < 16 {

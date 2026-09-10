@@ -61,6 +61,14 @@ impl Vec3 {
     pub fn as_array(&self) -> [f32; 3] {
         [self.x, self.y, self.z]
     }
+
+    pub fn scalar(&mut self, scalar: f32) -> Vec3 {
+        Vec3 {
+            x: self.x * scalar,
+            y: self.y * scalar,
+            z: self.z * scalar,
+        }
+    }
 }
 
 impl Sub for Vec3 {
