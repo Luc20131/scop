@@ -30,6 +30,12 @@ impl Vao {
     }
 }
 
+impl Default for Vao {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct BufferObject {
     id: gl::types::GLuint,
@@ -61,7 +67,7 @@ impl BufferObject {
         unsafe {
             gl::BufferData(
                 self.r#type,
-                (data.len() * mem::size_of::<gl::types::GLfloat>()) as gl::types::GLsizeiptr,
+                std::mem::size_of_val(data) as gl::types::GLsizeiptr,
                 &data[0] as *const GLfloat as *const c_void,
                 self.usage,
             )
@@ -83,6 +89,7 @@ impl BufferObject {
 pub struct VertexAttribute {
     index: GLuint,
 }
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 impl VertexAttribute {
     pub fn new(
         index: u32,
@@ -94,8 +101,8 @@ impl VertexAttribute {
     ) -> VertexAttribute {
         unsafe {
             gl::VertexAttribPointer(index, size, r#type, normalized, stride, pointer);
-            VertexAttribute { index }
         }
+        VertexAttribute { index }
     }
 
     pub fn enable(&self) {

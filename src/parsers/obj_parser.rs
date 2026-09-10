@@ -103,15 +103,17 @@ impl ObjFile {
         if let Ok(content) = read_file(&path) {
             let mut mtl_file: MtlFile = MtlFile {
                 path: (path.clone()),
-                content: content,
+                content,
                 materials: HashMap::new(),
             };
             if !mtl_file.content.is_empty() {
                 mtl_file.parse();
-                println!(
-                    "Number of materials : {}",
-                    mtl_file.materials.iter().count()
-                );
+                println!("Number of materials : {}", mtl_file.materials.len());
+            }
+            for material in &mtl_file.materials {
+                self.materials
+                    .entry(material.0.clone())
+                    .insert_entry(material.1.clone());
             }
             self.mtl_files.push(mtl_file);
         } else {
@@ -153,17 +155,26 @@ impl ObjFile {
                 self.parse_mtl_file(line);
             }
             "o" => {
-                self.model.meshes.push(Mesh::default());
+                if self.model.meshes.is_empty() {
+                    self.model.meshes.push(Mesh::default());
+                } else if !self.model.meshes.last().unwrap().faces.is_empty() {
+                    self.model.meshes.push(Mesh::default());
+                }
                 println!("obj name: {}", data);
                 self.model.meshes.last_mut().unwrap().name = data.to_string();
             }
             "g" => {
+                if self.model.meshes.is_empty() {
+                    self.model.meshes.push(Mesh::default());
+                } else if !self.model.meshes.last().unwrap().faces.is_empty() {
+                    self.model.meshes.push(Mesh::default());
+                }
                 self.model.meshes.push(Mesh::default());
                 println!("group name: {}", data);
                 self.model.meshes.last_mut().unwrap().name = data.to_string();
             }
             "f" => {
-                if self.model.meshes.len() == 0 {
+                if self.model.meshes.is_empty() {
                     self.model.meshes.push(Mesh::default());
                 }
                 let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
@@ -177,11 +188,13 @@ impl ObjFile {
             }
             "s" => {}
             "usemtl" => {
-                if self.model.meshes.len() == 0 {
+                if self.model.meshes.is_empty() {
+                    self.model.meshes.push(Mesh::default());
+                } else if !self.model.meshes.last().unwrap().faces.is_empty() {
                     self.model.meshes.push(Mesh::default());
                 }
-                // let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
-                // msh.material = self.materials.get(&data.to_string()).unwrap().clone();
+                let msh: &mut Mesh = self.model.meshes.last_mut().unwrap();
+                msh.material = self.materials.get(data).cloned().unwrap_or_default();
             }
             "l" => {}
             _ => {}
@@ -207,7 +220,8 @@ impl ObjFile {
     fn modelise(&mut self) {
         println!("nb_mesh : {}", self.model.meshes.len());
         for mesh in &mut self.model.meshes {
-            let mut indice_map: HashMap<u32, u32> = HashMap::<u32, u32>::new();
+            let mut indice_map: HashMap<(u32, Option<u32>, Option<u32>), u32> =
+                HashMap::<(u32, Option<u32>, Option<u32>), u32>::new();
             let mut index: u32 = 0;
             let mut face_color: f32 = 0.0;
             for face in &mesh.faces {
@@ -216,46 +230,47 @@ impl ObjFile {
                     face_color = 0.0;
                 }
                 for face_elem in face {
-                    if !indice_map.contains_key(&face_elem.vertex) {
+                    let key = (face_elem.vertex, face_elem.tex_coord, face_elem.normals);
+                    if let std::collections::hash_map::Entry::Vacant(entry) = indice_map.entry(key)
+                    {
                         index += 1;
-                        indice_map.entry(face_elem.vertex).insert_entry(index);
+                        entry.insert(index);
                         let v_indice: usize = (face_elem.vertex - 1) as usize;
                         mesh.vertices.push(self.vertex[v_indice].x);
                         mesh.vertices.push(self.vertex[v_indice].y);
                         mesh.vertices.push(self.vertex[v_indice].z);
-                        if self.tex_coord.len() > face_elem.tex_coord.unwrap_or_default() as usize {
-                            mesh.vertices.push(
-                                self.tex_coord[face_elem.tex_coord.unwrap_or_default() as usize].0,
-                            );
-                            mesh.vertices.push(
-                                self.tex_coord[face_elem.tex_coord.unwrap_or_default() as usize].1,
-                            );
+                        if let Some(tex) = face_elem.tex_coord {
+                            if self.tex_coord.len() > (tex - 1) as usize {
+                                let t = self.tex_coord[(tex - 1) as usize];
+                                mesh.vertices.push(t.0);
+                                mesh.vertices.push(1.0 - t.1);
+                            }
                         } else {
-                            mesh.vertices.push(face_color);
-                            mesh.vertices.push(0.0);
+                            mesh.vertices.push(0.75);
+                            mesh.vertices.push(0.25);
                         }
-                        if self.normals.len() > face_elem.normals.unwrap_or_default() as usize {
-                            mesh.vertices.push(
-                                self.normals[face_elem.normals.unwrap_or_default() as usize].x,
-                            );
-                            mesh.vertices.push(
-                                self.normals[face_elem.normals.unwrap_or_default() as usize].y,
-                            );
-                            mesh.vertices.push(
-                                self.normals[face_elem.normals.unwrap_or_default() as usize].z,
-                            );
+                        if let Some(normal) = face_elem.normals {
+                            let norm = self.normals[(normal - 1) as usize].clone();
+                            mesh.vertices.push(norm.x);
+                            mesh.vertices.push(norm.y);
+                            mesh.vertices.push(norm.z);
                         } else {
-                            mesh.vertices.push(0.0);
-                            mesh.vertices.push(0.0);
-                            mesh.vertices.push(0.0);
+                            let new_norm = compute_normal(
+                                self.vertex[(face[0].vertex - 1) as usize].clone(),
+                                self.vertex[(face[1].vertex - 1) as usize].clone(),
+                                self.vertex[(face[2].vertex - 1) as usize].clone(),
+                            );
+                            mesh.vertices.push(new_norm.x);
+                            mesh.vertices.push(new_norm.y);
+                            mesh.vertices.push(new_norm.x);
                         }
                         mesh.vertices.push(face_color);
                     }
-                    mesh.indices
-                        .push(*indice_map.entry(face_elem.vertex).or_default() - 1);
+                    mesh.indices.push(*indice_map.get(&key).unwrap() - 1);
                 }
             }
             mesh.setup_mesh();
+            mesh.material.init_map();
         }
     }
 
@@ -271,7 +286,7 @@ impl ObjFile {
 
 fn data_to_tex_coord(data: &str) -> Option<TexCoord> {
     let mut splited_data = data.split_whitespace();
-    if splited_data.clone().count() != 2 {
+    if splited_data.clone().count() < 2 {
         return None;
     }
     let value = (
@@ -360,4 +375,10 @@ fn data_to_face(data: &str) -> Option<Face> {
         face.push(face_elem);
     }
     Some(face)
+}
+
+fn compute_normal(v1: Vec3, v2: Vec3, v3: Vec3) -> Vec3 {
+    let mut edge1 = v2 - v1.clone();
+    let edge2 = v3 - v1;
+    edge1.cross(edge2).normalize()
 }

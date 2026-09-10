@@ -42,19 +42,24 @@ impl Vec3 {
     }
 
     /// Normalize the concerned Vec3
-    pub fn normalize(&mut self) {
+    pub fn normalize(&mut self) -> Vec3 {
         let v_norm = f32::sqrt(self.x * self.x + self.y * self.y + self.z * self.z);
         self.x /= v_norm;
         self.y /= v_norm;
         self.z /= v_norm;
+        self.clone()
     }
 
-    pub fn cross(v1: Vec3, v2: Vec3) -> Vec3 {
+    pub fn cross(&mut self, v2: Vec3) -> Vec3 {
         Vec3 {
-            x: v1.y * v2.z - v2.y * v1.z,
-            y: v1.z * v2.x - v2.z * v1.x,
-            z: v1.x * v2.y - v2.x * v1.y,
+            x: self.y * v2.z - v2.y * self.z,
+            y: self.z * v2.x - v2.z * self.x,
+            z: self.x * v2.y - v2.x * self.y,
         }
+    }
+
+    pub fn as_array(&self) -> [f32; 3] {
+        [self.x, self.y, self.z]
     }
 }
 

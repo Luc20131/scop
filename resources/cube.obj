@@ -3,7 +3,7 @@
 
 o cube
 
-mtllib 42.mtl
+mtllib cube.mtl
 v  1.0  1.0  1.0
 v  1.0  -1.0  1.0
 v  1.0  -1.0  -1.0

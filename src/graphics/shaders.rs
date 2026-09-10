@@ -49,21 +49,41 @@ impl Shader {
         }
     }
 
-    pub fn set_int(&mut self, name: &CString, value: i32) {
+    pub fn set_int(&mut self, name: &str, value: i32) {
+        let name_formated = &CString::new(name).unwrap();
         unsafe {
-            gl::Uniform1i(gl::GetUniformLocation(self.id, name.as_ptr()), value);
+            gl::Uniform1i(
+                gl::GetUniformLocation(self.id, name_formated.as_ptr()),
+                value,
+            );
         }
     }
 
-    pub fn set_float(&mut self, name: &CString, value: f32) {
+    pub fn set_float(&mut self, name: &str, value: f32) {
+        let name_formated = &CString::new(name).unwrap();
         unsafe {
-            gl::Uniform1f(gl::GetUniformLocation(self.id, name.as_ptr()), value);
+            gl::Uniform1f(
+                gl::GetUniformLocation(self.id, name_formated.as_ptr()),
+                value,
+            );
         }
     }
 
-    pub fn set_matrix4(&mut self, name: &CString, matrix: Matrix4<f32>) {
+    pub fn set_vec3(&mut self, name: &str, value: &[f32]) {
+        let name_formated = &CString::new(name).unwrap();
         unsafe {
-            let matrix_loc = gl::GetUniformLocation(self.id, name.as_ptr());
+            gl::Uniform3fv(
+                gl::GetUniformLocation(self.id, name_formated.as_ptr()),
+                1,
+                value.as_ptr(),
+            );
+        }
+    }
+
+    pub fn set_matrix4(&mut self, name: &str, matrix: Matrix4<f32>) {
+        let name_formated = &CString::new(name).unwrap();
+        unsafe {
+            let matrix_loc = gl::GetUniformLocation(self.id, name_formated.as_ptr());
             gl::UniformMatrix4fv(matrix_loc, 1, gl::TRUE, matrix.value.as_ptr());
         }
     }
@@ -81,7 +101,6 @@ fn compile_shader(shader_code: String, _type: GLenum) -> Result<GLuint, String> 
     unsafe {
         gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut success);
     }
-
     if success == gl::TRUE as GLint {
         return Ok(shader);
     }

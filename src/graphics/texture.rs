@@ -1,40 +1,55 @@
-use image::{EncodableLayout, ImageBuffer, Rgba};
-use std::{ffi::OsString, path::Path};
+use gl::types::GLint;
+use std::{ffi::OsString, path::Path, vec};
+
+use crate::parsers::bmp_parser::{Pixel, image_loader};
 
 #[derive(Debug, Clone)]
 pub struct Texture {
     pub id: u32,
     pub name: OsString,
-    pub data: ImageBuffer<Rgba<u8>, Vec<u8>>,
+    pub data: Vec<Pixel>,
     pub width: u32,
-    pub height: u32,
-    pub _type: String,
+    pub height: i32,
+    pub type_: String,
+    is_set: bool,
 }
 
 impl Texture {
-    pub fn new(path: &Path) -> Self {
-        let bmp = image::open(path).expect("crash").into_rgba8();
-        let mut id: u32 = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-        }
-        Self {
-            id: id,
-            name: path.file_name().unwrap_or_default().to_os_string(),
-            width: bmp.width(),
-            height: bmp.height(),
-            data: bmp,
-            _type: "".to_string(),
+    pub fn new(path: &Path, flag: u32) -> Self {
+        println!("Loading image: {}", path.display());
+        let bmp = image_loader(path, flag);
+        match bmp {
+            Ok(mut img) => {
+                let mut id: u32 = 0;
+                unsafe {
+                    gl::GenTextures(1, &mut id);
+                }
+                return Self {
+                    id,
+                    name: path.file_name().unwrap_or_default().to_os_string(),
+                    width: img.width(),
+                    height: img.height(),
+                    data: img.img_pixels,
+                    type_: "undefined".to_string(),
+                    is_set: false,
+                };
+            }
+            Err(error) => {
+                dbg!(error);
+                println!("Error texture");
+                return Self::default();
+            }
         }
     }
 
     pub fn setup_tex(&mut self) {
+        if self.is_set {
+            return;
+        }
+        println!("Setup texture {}: {}", self.id, self.name.display());
+        self.is_set = true;
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
@@ -42,11 +57,34 @@ impl Texture {
                 self.width as i32,
                 self.height as i32,
                 0,
-                gl::RGBA,
+                gl::BGRA,
                 gl::UNSIGNED_BYTE,
-                self.data.as_bytes().as_ptr() as *const _,
+                self.data.as_slice().as_ptr() as *const _,
             );
             gl::GenerateMipmap(gl::TEXTURE_2D);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as GLint);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as GLint);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR_MIPMAP_NEAREST as GLint,
+            );
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
+        }
+    }
+}
+
+impl Default for Texture {
+    fn default() -> Self {
+        let id: u32 = 0;
+        Self {
+            id,
+            name: OsString::from("Default"),
+            width: 1,
+            height: 1,
+            data: vec![],
+            type_: "".to_string(),
+            is_set: false,
         }
     }
 }

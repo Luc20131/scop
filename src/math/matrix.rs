@@ -30,8 +30,8 @@ where
     /// Create view matrix
     pub fn look_at(cam_pos: Vec3, target_pos: Vec3, up: Vec3) -> Matrix4<f32> {
         let cam_dir = Vec3::normalized(cam_pos.clone() - target_pos);
-        let cam_right = Vec3::normalized(Vec3::cross(up, cam_dir.clone()));
-        let cam_up = Vec3::cross(cam_dir.clone(), cam_right.clone());
+        let cam_right = Vec3::normalized(up.clone().cross(cam_dir.clone()));
+        let cam_up = cam_dir.clone().cross(cam_right.clone());
         let mut cam = Matrix4 {
             value: [
                 cam_right.x,
