@@ -27,12 +27,10 @@ impl Light {
             dir: Vec3::new(0.0, -1.0, -1.0),
         };
 
-        res.mesh = ObjFile::new(Path::new(
-            "resources/edison-light-bulb/source/bolb/bolb.obj",
-        ))
-        .unwrap()
-        .model
-        .meshes[0]
+        res.mesh = ObjFile::new(Path::new("resources/42.obj"))
+            .unwrap()
+            .model
+            .meshes[0]
             .clone();
         res.mesh.setup_mesh();
         res

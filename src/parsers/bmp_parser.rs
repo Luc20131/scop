@@ -44,10 +44,15 @@ struct DibHeader {
     y_px_per_meter: u32,
     colors_in_color_table: u32,
     important_color_count: u32,
+    red_channel_bitmask: u32,
+    green_channel_bitmask: u32,
+    blue_channel_bitmask: u32,
+    alpha_channel_bitmask: u32,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 #[allow(unused)]
+#[repr(C)]
 pub struct BGRA {
     blue: u8,
     green: u8,
@@ -96,6 +101,7 @@ pub fn image_loader(path: &Path, flag: u32) -> Result<BmpImage, BmpError> {
     let header = parse_header(&file)?;
 
     let dib_header: DibHeader = parse_dib(&file)?;
+    dbg!(&dib_header);
     let mut colors_list: Vec<Pixel> = vec![];
     let mut img_pixels: Vec<BGRA> = vec![];
     if dib_header.bits_per_pixel < 16 {
@@ -105,8 +111,6 @@ pub fn image_loader(path: &Path, flag: u32) -> Result<BmpImage, BmpError> {
         img_pixels =
             parse_px_from_color_table(&file, colors_list, &dib_header, header.data_offset, flag)?;
     } else {
-        // let img = read(path.to_str().unwrap_or_default()).expect("Failed to open image");
-        // let img_name = path.file_name().unwrap_or_default();
         img_pixels = parse_pixel(&file, header.data_offset, &dib_header)?;
     }
     let image = BmpImage {
@@ -122,7 +126,6 @@ pub fn image_loader(path: &Path, flag: u32) -> Result<BmpImage, BmpError> {
     };
 
     Ok(image)
-    // dbg!(img_data.name);
 }
 
 fn parse_header(mut file: &File) -> Result<BmpHeader, BmpError> {
@@ -162,6 +165,10 @@ fn parse_dib(mut file: &File) -> Result<DibHeader, BmpError> {
         y_px_per_meter: u32::from_le_bytes(buffer[28..32].try_into().unwrap()),
         colors_in_color_table: u32::from_le_bytes(buffer[32..36].try_into().unwrap()),
         important_color_count: u32::from_le_bytes(buffer[36..40].try_into().unwrap()),
+        red_channel_bitmask: u32::from_le_bytes(buffer[40..44].try_into().unwrap()),
+        green_channel_bitmask: u32::from_le_bytes(buffer[44..48].try_into().unwrap()),
+        blue_channel_bitmask: u32::from_le_bytes(buffer[48..52].try_into().unwrap()),
+        alpha_channel_bitmask: u32::from_le_bytes(buffer[56..60].try_into().unwrap()),
     };
     Ok(dib)
 }
@@ -241,9 +248,7 @@ fn parse_px_from_color_table(
     let width = dib_header.width;
     let height: i32 = (dib_header.height as i32).abs();
     let row_size: usize = (width as usize * dib_header.bits_per_pixel as usize + 31) / 32 * 4;
-    dbg!(row_size);
     let is_mirrored = dib_header.height > 0;
-
     let mut row_buf = vec![0u8; row_size];
     let mut pixels: Vec<BGRA> = vec![BGRA::default(); (width as usize) * (height as usize)];
 
@@ -273,11 +278,12 @@ fn parse_px_from_color_table(
 
 fn u32_to_bgra(value: u32) -> BGRA {
     let oui = value.to_le_bytes();
-    let mut color: BGRA = BGRA::default();
+    let color = BGRA {
+        blue: oui[3],
+        green: oui[2],
+        red: oui[1],
+        alpha: 255,
+    };
 
-    color.blue = oui[0];
-    color.green = oui[1];
-    color.red = oui[0];
-    color.alpha = 255 as u8;
     color
 }
